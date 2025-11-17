@@ -5,10 +5,9 @@ public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 6f;
     public float rotationSpeed = 12f;   // qué tan rápido gira hacia la dirección de movimiento
-    public bool cameraRelative = false; // si quieres que WASD sea relativo a la cámara
 
-    Rigidbody rb;
-    Vector3 inputDir;
+    private Rigidbody rb;
+    private Vector3 inputDir;
 
     void Awake()
     {
@@ -19,18 +18,34 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        // Lectura de input
         float h = Input.GetAxisRaw("Horizontal"); // A/D o ←/→
         float v = Input.GetAxisRaw("Vertical");   // W/S o ↑/↓
-        Vector3 dir = new Vector3(h, 0f, v);
-        dir = Vector3.ClampMagnitude(dir, 1f);
 
-        if (cameraRelative && Camera.main)
+        // Dirección en función de la cámara (para que W sea "hacia donde miro")
+        Vector3 dir = Vector3.zero;
+
+        if (Camera.main != null)
         {
-            // Proyecta forward/right de la cámara en el plano XZ
-            Vector3 camF = Camera.main.transform.forward; camF.y = 0f; camF.Normalize();
-            Vector3 camR = Camera.main.transform.right;   camR.y = 0f; camR.Normalize();
+            // Forward y Right de la cámara proyectados al plano XZ
+            Vector3 camF = Camera.main.transform.forward;
+            camF.y = 0f;
+            camF.Normalize();
+
+            Vector3 camR = Camera.main.transform.right;
+            camR.y = 0f;
+            camR.Normalize();
+
             dir = camF * v + camR * h;
         }
+        else
+        {
+            // Por si no hay cámara, usamos ejes del mundo
+            dir = new Vector3(h, 0f, v);
+        }
+
+        // Limitar magnitud a 1 para que en diagonal no vaya más rápido
+        dir = Vector3.ClampMagnitude(dir, 1f);
 
         inputDir = dir;
     }
@@ -39,7 +54,7 @@ public class PlayerMovement : MonoBehaviour
     {
         // Movimiento
         Vector3 targetVel = inputDir * moveSpeed;
-        Vector3 velChange = targetVel - rb.linearVelocity;
+        Vector3 velChange = targetVel - rb.linearVelocity; // <- corregido
         velChange.y = 0f;
         rb.AddForce(velChange, ForceMode.VelocityChange);
 
