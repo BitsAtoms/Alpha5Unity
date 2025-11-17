@@ -9,3 +9,4 @@ UserSettings/
 .venv/
 venv/
 /venv/
+*.pt
