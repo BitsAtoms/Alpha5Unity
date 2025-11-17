@@ -50,6 +50,7 @@
     <Compile Include="Assets\Scenes\Scripts\CameraFollowPlayer.cs" />
     <Compile Include="Assets\Scenes\Scripts\KeeperPingPong.cs" />
     <Compile Include="Assets\Scenes\Scripts\PlayerMovement.cs" />
+    <Compile Include="Assets\Scenes\Scripts\RealBallTracker.cs" />
     <Compile Include="Assets\Scenes\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scenes\Scripts\PlayerKick.cs" />
     <Compile Include="Assets\Scenes\Scripts\FailTrigger.cs" />
