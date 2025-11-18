@@ -47,9 +47,9 @@ while True:
                 cvzone.cornerRect(img, (x1, y1, x2-x1, y2-y1), colorR=(0,255,255))
                 cvzone.putTextRect(img, "Ball", (x1, y1-10), colorR=(0,255,255), scale=1, thickness=1)
 
-                # NORMALIZAR A 0..1
-                cx_norm = cx / img.shape[1]       # 0 (izq) → 1 (derecha)
-                cy_norm = cy / img.shape[0]       # 0 (arriba) → 1 (abajo)
+                # NORMALIZAR A 0..1 Y CAMBIAR LOS EJES PARA QUE NO ESTEN INVERTIDOS
+                cx_norm = cy / img.shape[0]      # 0 (arriba) → 1 (abajo)
+                cy_norm = cx / img.shape[1]      # 0 (izq) → 1 (derecha)
 
                 # Invertimos Y para que 0 sea abajo y 1 arriba (como en Unity)
                 cy_norm = 1.0 - cy_norm
@@ -60,8 +60,12 @@ while True:
     cv2.imshow("Ball Detection", img)
 
     # Guardar la última posición detectada
-    with open(OUTPUT_PATH, "w") as f:
-        f.write(position + "\n")
+    try:
+        with open(OUTPUT_PATH, "w") as f:
+            f.write(position + "\n")
+    except PermissionError:
+        # Unity está leyendo justo ahora; ignoramos este frame
+        pass
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break

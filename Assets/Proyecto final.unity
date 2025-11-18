@@ -291,6 +291,7 @@ GameObject:
   - component: {fileID: 372651994}
   - component: {fileID: 372651993}
   - component: {fileID: 372651999}
+  - component: {fileID: 372652000}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Ball
@@ -305,7 +306,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 372651992}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b00715ae23284404ba3603491a16801c, type: 3}
   m_Name: 
@@ -332,8 +333,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 1
@@ -436,7 +437,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 372651992}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8026457637f97b043a935ea5a2cda97e, type: 3}
   m_Name: 
@@ -446,6 +447,26 @@ MonoBehaviour:
   speedToForce: 2
   upwardBonus: 0
   reKickDelay: 0.25
+--- !u!114 &372652000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 372651992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19fb43d4b31468947abee35b0a5ed239, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RealBallTracker
+  filePath: C:\Tracking\AnimationFile.txt
+  readInterval: 0.02
+  fieldWidth: 10
+  fieldHeight: 5
+  fieldOrigin: {x: -5, y: 0.11, z: -2.5}
+  invertY: 1
+  smoothMovement: 1
+  smoothSpeed: 20
 --- !u!1 &381705285
 GameObject:
   m_ObjectHideFlags: 0
