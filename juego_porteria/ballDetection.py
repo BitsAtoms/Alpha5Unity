@@ -6,7 +6,7 @@ import torch
 import os
 
 # Ruta donde se guardará el archivo para Unity
-OUTPUT_PATH = r"C:\Tracking\AnimationFile.txt" 
+OUTPUT_PATH = r"C:\\Tracking\\AnimationFile.txt" 
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 
 cap = cv2.VideoCapture(0)
