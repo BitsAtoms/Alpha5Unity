@@ -22,7 +22,7 @@ model.to(device)
 BALL_CLASS_ID = 32
 
 # Posición por defecto (centro del campo)
-position = "0.5000,0.5000,0.0000"
+position = "0.0000,0.0000,0.0000"
 
 while True:
     success, img = cap.read()

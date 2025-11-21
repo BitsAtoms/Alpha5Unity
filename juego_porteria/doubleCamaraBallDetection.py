@@ -20,6 +20,9 @@ BASELINE_METERS = 0.40 # distancia entre las dos cámaras
 # APROXIMACIÓN: puedes empezar en 800, luego ajustar con Z_SCALE
 FOCAL_PIXELS = 800.0
 
+#Ruta del fixero
+FILE_PATH =  r"C:\\Tracking\\AnimationFile.txt"
+
 # 🔧 FACTOR DE ESCALA PARA AJUSTAR Z A TUS MEDIDAS REALES
 # Haz la prueba: coloca la pelota a 3 m, mira qué Z te da, y pon Z_SCALE = 3 / Z_medio
 Z_SCALE = 0.20   # EJEMPLO: si el programa dice ~30m cuando realmente son 3m → 3/30 = 0.1
@@ -55,8 +58,7 @@ cap_right.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 
 print("🎥 Cámaras inicializadas.")
 
-output_file = open("StereoCoords.txt", "w", encoding="utf-8")
-print("📂 Guardando coordenadas 3D en StereoCoords.txt")
+output_file = open(FILE_PATH, "w", encoding="utf-8")
 
 
 def detectar_pelota(img, min_conf=0.35):
@@ -193,4 +195,3 @@ cap_left.release()
 cap_right.release()
 cv2.destroyAllWindows()
 output_file.close()
-print("✅ Cámaras cerradas y archivo StereoCoords.txt guardado.")
