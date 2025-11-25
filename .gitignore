@@ -1,0 +1,62 @@
+# ========== UNITY ==========
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+# Cache de paquetes
+[Pp]ackages/manifest-temp.json
+
+# Asset Store
+Assets/AssetStoreTools*
+
+# Scene Dependency Cache
+*.info
+
+# Archivos de Unity
+*.pidb
+*.suo
+*.user
+*.userprefs
+*.csproj
+*.unityproj
+*.sln
+*.tmp
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# ========== VISUAL STUDIO ==========
+.vs/
+.vscode/
+
+# Archivos de build de Visual Studio
+*.dbmdl
+*.bak
+*.backup
+*.log
+*.obj
+*.sdf
+*.opensdf
+*.cache
+*.ilk
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# ========== PYTHON / VENV ==========
+venv/
+__pycache__/
+*.pyc
+
+# ========== MODELOS ==========
+*.pt
+*.onnx
+*.weights
