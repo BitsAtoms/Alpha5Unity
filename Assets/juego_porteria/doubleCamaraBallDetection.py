@@ -2,145 +2,151 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import cvzone
-import torch
 import os
+import time
+import threading
 
-# ============================
-# CONFIGURACIÓN
-# ============================
-
-OUT_TOP = r"C:\\Tracking\\AnimationFile_Top.txt"    # X, Z
-OUT_SIDE = r"C:\\Tracking\\AnimationFile_Side.txt"  # Y (por ahora 0)
-
-os.makedirs(os.path.dirname(OUT_TOP), exist_ok=True)
-
-CAM_LEFT = 0
-CAM_RIGHT = 1
-FRAME_W = 640
-FRAME_H = 360
+# ==============================
+# CONFIGURACIÓN GENERAL
+# ==============================
 
 BALL_CLASS_ID = 32
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"   # Como pediste
 print("Usando:", device)
 
-model = YOLO("yolo11x.pt")
-model.to(device)
+model = YOLO("yolo11n.pt").to(device)   # Modelo ligero
 
-# ============================
-# INICIAR CÁMARAS
-# ============================
-
-capL = cv2.VideoCapture(CAM_LEFT)
-capR = cv2.VideoCapture(CAM_RIGHT)
-
-capL.set(3, FRAME_W)
-capL.set(4, FRAME_H)
-capR.set(3, FRAME_W)
-capR.set(4, FRAME_H)
-
-if not capL.isOpened() or not capR.isOpened():
-    raise IOError("❌ No se pudieron abrir ambas cámaras.")
+# ==============================
+# FUNCIONES DE PROCESADO
+# ==============================
 
 
-# ============================
-# FUNCIÓN DETECTAR PELOTA
-# ============================
+def process_top_camera():
+    OUTPUT_PATH = r"C:\\Tracking\\AnimationFile_Top.txt"
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 
-def detectar(img):
-    results = model(img, verbose=False, device=device, stream=False)
-    best_area = 0
-    best = None
+    CAM_INDEX = 0
+    cap = cv2.VideoCapture(CAM_INDEX, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 0)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    for r in results:
-        for box in r.boxes:
+    position = "0.0000,0.0000"
+    last_write = time.time()
+    write_interval = 0.02  # 50 FPS
+
+    while True:
+
+        ret, frame = cap.read()
+        if not ret:
+            continue
+
+        results = model(frame, verbose=False)[0]
+        h, w, _ = frame.shape
+
+        for box in results.boxes:
             if int(box.cls[0]) == BALL_CLASS_ID:
+
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
-                area = (x2 - x1) * (y2 - y1)
-                if area > best_area:
-                    best_area = area
-                    cx = x1 + (x2 - x1) // 2
-                    cy = y1 + (y2 - y1) // 2
-                    best = (cx, cy, x1, y1, x2, y2)
+                cx = (x1 + x2) // 2
+                cy = (y1 + y2) // 2
 
-    return best
+                # Normalizar
+                cx_norm = cx / w
+                cz_norm = 1 - (cy / h)
 
+                cx_norm = np.clip(cx_norm, 0.0, 1.0)
+                cz_norm = np.clip(cz_norm, 0.0, 1.0)
 
-# ============================
-# LOOP PRINCIPAL
-# ============================
+                position = f"{cx_norm:.4f},{cz_norm:.4f}"
 
-# Valores iniciales seguros (centro del campo)
-last_top = "0.5000,0.5000"
-last_side = "0.0000"  # altura por defecto
+                cvzone.cornerRect(frame, (x1, y1, x2 - x1, y2 - y1))
+                cvzone.putTextRect(frame, "Ball", (x1, y1 - 10))
+                break
 
-while True:
+        if time.time() - last_write >= write_interval:
+            try:
+                with open(OUTPUT_PATH, "w") as f:
+                    f.write(position + "\n")
+            except PermissionError:
+                pass
+            last_write = time.time()
 
-    retL, frameL = capL.read()
-    retR, frameR = capR.read()
+        cv2.imshow("Top Camera", frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
 
-    if not retL or not retR:
-        continue
-
-    frameL = cv2.resize(frameL, (FRAME_W, FRAME_H))
-    frameR = cv2.resize(frameR, (FRAME_W, FRAME_H))
-
-    detL = detectar(frameL)
-    detR = detectar(frameR)
-
-    # ============================
-    # SI AMBAS CÁMARAS DETECTAN LA PELOTA
-    # ============================
-
-    if detL and detR:
-
-        cxL, cyL, x1L, y1L, x2L, y2L = detL
-
-        # ============================
-        # NORMALIZACIÓN X,Z PARA UNITY
-        # ============================
-
-        cx_norm = cyL / FRAME_H       # Y → X
-        cz_norm = cxL / FRAME_W       # X → Z
-        cz_norm = 1 - cz_norm         # invertir eje horizontal
-
-        salida_top = f"{cx_norm:.4f},{cz_norm:.4f}"
-        last_top = salida_top
-
-        # ============================
-        # ALTURA (Y) — de momento fija
-        # ============================
-
-        salida_side = "0.0000"
-        last_side = salida_side
-
-    else:
-        salida_top = last_top
-        salida_side = last_side
-
-    # ============================
-    # GUARDAR LOS 2 ARCHIVOS
-    # ============================
-
-    try:
-        with open(OUT_TOP, "w") as f:
-            f.write(salida_top)
-
-        with open(OUT_SIDE, "w") as f:
-            f.write(salida_side)
-
-    except PermissionError:
-        pass
-
-    # Mostrar cámaras
-    cv2.imshow("Camara Izquierda", frameL)
-    cv2.imshow("Camara Derecha", frameR)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    cap.release()
+    cv2.destroyWindow("Top Camera")
 
 
-capL.release()
-capR.release()
+def process_side_camera():
+    OUTPUT_PATH = r"C:\\Tracking\\AnimationFile_Side.txt"
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+
+    CAM_INDEX = 1
+    cap = cv2.VideoCapture(CAM_INDEX, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 0)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    y_position = "0.0000"
+    last_write = time.time()
+    write_interval = 0.02  # 50 FPS
+
+    while True:
+
+        ret, frame = cap.read()
+        if not ret:
+            continue
+
+        results = model(frame, verbose=False)[0]
+        h, w, _ = frame.shape
+
+        for box in results.boxes:
+            if int(box.cls[0]) == BALL_CLASS_ID:
+
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                cx = (x1 + x2) // 2
+                cy = (y1 + y2) // 2
+
+                y_norm = 1 - (cy / h)
+                y_norm = np.clip(y_norm, 0.0, 1.0)
+                y_position = f"{y_norm:.4f}"
+
+                cvzone.cornerRect(frame, (x1, y1, x2 - x1, y2 - y1))
+                cvzone.putTextRect(frame, "Ball", (x1, y1 - 10))
+                break
+
+        if time.time() - last_write >= write_interval:
+            try:
+                with open(OUTPUT_PATH, "w") as f:
+                    f.write(y_position + "\n")
+            except PermissionError:
+                pass
+            last_write = time.time()
+
+        cv2.imshow("Side Camera", frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    cap.release()
+    cv2.destroyWindow("Side Camera")
+
+
+# ==============================
+# LANZAR HILOS
+# ==============================
+
+thread_top = threading.Thread(target=process_top_camera)
+thread_side = threading.Thread(target=process_side_camera)
+
+thread_top.start()
+thread_side.start()
+
+thread_top.join()
+thread_side.join()
+
 cv2.destroyAllWindows()
-print("Cámaras cerradas.")
