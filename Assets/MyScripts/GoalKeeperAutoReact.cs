@@ -3,29 +3,33 @@ using UnityEngine;
 public class GoalkeeperAutoReact : MonoBehaviour
 {
     [Header("Referencias")]
-    public Transform portero;          // El cuerpo completo del portero
-    public Transform ball;             // La pelota real (con RealBallTracker3D)
+    public Transform portero;   // hijo local
+    public Transform ball;
 
     [Header("Movimiento del portero")]
-    public float moveDistance = 0.8f;  // Distancia en eje Z (adelante/atrás)
-    public float moveSpeed = 2f;       // Velocidad reducida (antes era 5)
+    public float moveDistance = 1.5f;
+    public float moveSpeed = 5f;
 
-    [Header("Detección de movimiento real de la pelota")]
-    public float movementThreshold = 0.2f;
+    [Header("Detección del movimiento real de la pelota")]
+    public float movementThreshold = 0.25f;   // SUBIDO: detección más realista
     public float quietThreshold = 0.02f;
     public float checkTime = 0.05f;
 
     private bool animationTriggered = false;
     private Vector3 lastBallPos;
     private float timer = 0f;
-    private bool ballIsMoving = false;
 
-    private Vector3 initialPorteroPos;
+    private Vector3 localStart;
+    private float savedLocalY;
 
     void Start()
     {
         lastBallPos = ball.position;
-        initialPorteroPos = portero.localPosition;
+
+        localStart = portero.localPosition;
+        savedLocalY = localStart.y;
+
+        Debug.Log("[GK] Iniciado correctamente. Posición local = " + localStart);
     }
 
     void Update()
@@ -34,59 +38,73 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
         if (timer >= checkTime)
         {
-            Vector3 currentPos = ball.position;
-            float distance = Vector3.Distance(currentPos, lastBallPos);
+            float distance = Vector3.Distance(ball.position, lastBallPos);
 
-            // Detecta movimiento rápido = chute real
+            // --- Detectar CHUTÉ REAL ---
             if (distance > movementThreshold)
             {
-                ballIsMoving = true;
+                Debug.Log("[GK] CHUTE DETECTADO. Distancia = " + distance);
 
                 if (!animationTriggered)
                 {
                     animationTriggered = true;
+
+                    // ACTIVAR ventana de tiro REAL
+                    if (GameManager.I != null)
+                    {
+                        GameManager.I.ArmShotWindow();
+                        Debug.Log("[GK] Ventana de tiro ARMADA desde portero");
+                    }
+
                     ElegirMovimiento();
                 }
             }
-            else if (distance < quietThreshold)
-            {
-                ballIsMoving = false;
-            }
 
-            lastBallPos = currentPos;
+            lastBallPos = ball.position;
             timer = 0f;
         }
 
-        // Reiniciar animación si la pelota deja de moverse
-        if (animationTriggered && !ballIsMoving)
-        {
-            animationTriggered = false;
-            StartCoroutine(MoverPortero(initialPorteroPos));
-        }
+        // aseguramos altura fija
+        Vector3 p = portero.localPosition;
+        p.y = savedLocalY;
+        portero.localPosition = p;
+    }
+
+    public void ResetForNewRound()
+    {
+        animationTriggered = false;
+        StopAllCoroutines();
+
+        portero.localPosition = localStart;
+
+        Vector3 p = portero.localPosition;
+        p.y = savedLocalY;
+        portero.localPosition = p;
+
+        lastBallPos = ball.position;
+
+        Debug.Log("[GK] Reset de ronda completado");
     }
 
     private void ElegirMovimiento()
     {
-        int randomMove = Random.Range(0, 3);
+        int r = Random.Range(0, 3);
+        Vector3 destino = localStart;
 
-        // 0 = Retroceder (Z negativo)
-        // 1 = Quieto
-        // 2 = Avanzar (Z positivo)
+        if (r == 0) destino += Vector3.back * moveDistance;
+        else if (r == 2) destino += Vector3.forward * moveDistance;
 
-        if (randomMove == 0)
-            StartCoroutine(MoverPortero(initialPorteroPos + Vector3.back * moveDistance));
-
-        else if (randomMove == 1)
-            StartCoroutine(MoverPortero(initialPorteroPos));
-
-        else if (randomMove == 2)
-            StartCoroutine(MoverPortero(initialPorteroPos + Vector3.forward * moveDistance));
+        StartCoroutine(MoverPortero(destino));
     }
 
     private System.Collections.IEnumerator MoverPortero(Vector3 destino)
     {
-        float t = 0;
+        destino.y = savedLocalY;
+
         Vector3 inicio = portero.localPosition;
+        inicio.y = savedLocalY;
+
+        float t = 0;
 
         while (t < 1)
         {
@@ -94,5 +112,9 @@ public class GoalkeeperAutoReact : MonoBehaviour
             portero.localPosition = Vector3.Lerp(inicio, destino, t);
             yield return null;
         }
+
+        Vector3 p = portero.localPosition;
+        p.y = savedLocalY;
+        portero.localPosition = p;
     }
 }

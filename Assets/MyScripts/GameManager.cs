@@ -2,7 +2,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 
-[DefaultExecutionOrder(-100)] // que se inicialice pronto
+[DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
     public static GameManager I;
@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     public TMP_Text uiScore;
     public TMP_Text uiAttempts;
 
-    [Header("Refs")]
+    [Header("Referencias")]
     public BallController ball;
     public Transform ballStartPoint;
     public Transform player;
@@ -27,33 +27,25 @@ public class GameManager : MonoBehaviour
 
     int score = 0;
     int attempts = 0;
+
     bool shotArmed = false;
     float shotTimer = 0f;
     bool betweenRounds = true;
     bool gameOver = false;
 
-    void OnEnable()
-    {
-        I = this;
-        Debug.Log("[GM] OnEnable -> singleton listo");
-    }
-
-    void OnDisable()
-    {
-        if (I == this) I = null;
-        Debug.Log("[GM] OnDisable -> singleton limpiado");
-    }
+    void OnEnable() { I = this; }
+    void OnDisable() { if (I == this) I = null; }
 
     void Awake()
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
-        Set(uiMessage, ""); Set(uiScore, ""); Set(uiAttempts, "");
-        Debug.Log("[GM] Awake()");
+        Set(uiMessage, ""); 
+        Set(uiScore, ""); 
+        Set(uiAttempts, "");
     }
 
     void Start()
     {
-        Debug.Log("[GM] Start() -> ResetPositions y Co_StartRound");
         ResetPositions();
         StartCoroutine(Co_StartRound());
     }
@@ -66,127 +58,153 @@ public class GameManager : MonoBehaviour
         {
             shotTimer += Time.deltaTime;
             if (shotTimer >= shotTimeout)
-            {
                 ShotFail();
-            }
         }
     }
 
-    // === API ===
+    // ============================
+    //         ESTADO TIRO
+    // ============================
     public bool CanShoot()
     {
         bool ok = !betweenRounds && !gameOver;
-        // Debug.Log($"[GM] CanShoot? {ok} (betweenRounds={betweenRounds}, gameOver={gameOver})");
+        Debug.Log($"[GM] CanShoot() = {ok} | betweenRounds={betweenRounds} | gameOver={gameOver} | shotArmed={shotArmed}");
         return ok;
     }
 
+    // *** IMPORTANTE: Ahora NO depende de betweenRounds ***
     public void ArmShotWindow()
     {
-        if (!CanShoot())
+        if (gameOver)
         {
-            Debug.Log("[GM] ArmShotWindow() ignorado: no se puede chutar todavía");
+            Debug.Log("[GM] ArmShotWindow() IGNORADO → Juego terminado");
             return;
         }
+
         shotArmed = true;
         shotTimer = 0f;
         ball?.ResetFlags();
-        Debug.Log("[GM] Tiro ARMADO (ventana 2s activa)");
+
+        Debug.Log("[GM] Ventana de tiro ACTIVADA por 2 segundos");
     }
 
+    // ============================
+    //           RESULTADOS
+    // ============================
     public void GoalScored()
     {
-        Debug.Log($"[GM] GoalScored() llamado | shotArmed={shotArmed} canShoot={CanShoot()}");
-        if (!shotArmed || !CanShoot()) return;
+        Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed}");
 
-        if (ball != null && ball.TouchedKeeper)
+        if (!shotArmed)
         {
-            ShotFail();
+            Debug.Log("[GM] GoalScored() IGNORADO → shotArmed = false");
             return;
         }
 
-        score += 1;
-        attempts += 1;
-        Debug.Log($"[GM] GOL → score={score} attempts={attempts}");
+        score++;
+        attempts++;
         StartCoroutine(Co_RestartRound("¡GOL!"));
     }
 
     public void ShotFail()
     {
-        Debug.Log($"[GM] ShotFail() llamado | shotArmed={shotArmed} canShoot={CanShoot()}");
-        if (!shotArmed || !CanShoot()) return;
+        if (!shotArmed)
+        {
+            Debug.Log("[GM] ShotFail() IGNORADO → shotArmed = false");
+            return;
+        }
 
-        attempts += 1;
-        Debug.Log($"[GM] FALLO → score={score} attempts={attempts}");
+        attempts++;
         StartCoroutine(Co_RestartRound("Has fallado"));
     }
 
+    // ============================
+    //           RONDAS
+    // ============================
     IEnumerator Co_RestartRound(string resultMsg)
     {
         shotArmed = false;
         shotTimer = 0f;
 
+        betweenRounds = true;
+
         if (attempts >= maxAttempts)
         {
             gameOver = true;
             Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{maxAttempts}");
-            Set(uiScore, ""); Set(uiAttempts, "");
-            Debug.Log("[GM] FIN DEL JUEGO");
+            Set(uiScore, ""); 
+            Set(uiAttempts, "");
             yield break;
         }
 
-        betweenRounds = true;
-
         Set(uiMessage, resultMsg);
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(1.5f);
 
-        Set(uiMessage, ""); Set(uiScore, "");
+        Set(uiMessage, "");
+        Set(uiScore, "");
 
         ResetPositions();
-
         yield return StartCoroutine(Co_StartRound());
-
-        betweenRounds = false;
-        Debug.Log("[GM] Ronda lista: se puede chutar");
     }
 
     IEnumerator Co_StartRound()
-        {
-            Debug.Log("[GM] Co_StartRound -> mostrando banners de inicio");
-            Set(uiAttempts, $"Intento: {attempts + 1}/{maxAttempts}");
-            Set(uiMessage, "Listo para chutar");
-            Set(uiScore, $"Puntuación: {score}");
+    {
+        Debug.Log("[GM] Iniciando ronda...");
 
-            yield return new WaitForSeconds(bannerDuration);
+        // *** ARREGLADO: YA se puede chutar desde el principio ***
+        betweenRounds = false;
 
-            Set(uiAttempts, "");
-            Set(uiMessage, "");
-            Set(uiScore, "");
+        Set(uiAttempts, $"Intento: {attempts + 1}/{maxAttempts}");
+        Set(uiMessage, "Listo para chutar");
+        Set(uiScore, $"Puntuación: {score}");
 
-            // 👇👇 ARREGLO CLAVE
-            betweenRounds = false;       // ahora sí se puede chutar
-            Debug.Log("[GM] Co_StartRound -> banners ocultos; ya se puede chutar (betweenRounds=false)");
-        }
+        // El mensaje NO bloquea chutar
+        yield return new WaitForSeconds(bannerDuration);
 
+        Set(uiAttempts, "");
+        Set(uiMessage, "");
+        Set(uiScore, "");
 
+        Debug.Log("[GM] Ronda lista → Se puede chutar");
+    }
+
+    // ============================
+    //        RESET POSICIONES
+    // ============================
     void ResetPositions()
     {
-        Debug.Log("[GM] ResetPositions()");
         if (ball && ballStartPoint)
         {
             var rb = ball.GetComponent<Rigidbody>();
-            if (rb) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+            if (rb)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
             ball.transform.position = ballStartPoint.position;
+            ball.ResetFlags();
         }
 
         if (player && playerStartPoint)
         {
             var prb = player.GetComponent<Rigidbody>();
-            if (prb) { prb.linearVelocity = Vector3.zero; prb.angularVelocity = Vector3.zero; }
+            if (prb)
+            {
+                prb.linearVelocity = Vector3.zero;
+                prb.angularVelocity = Vector3.zero;
+            }
             player.position = playerStartPoint.position;
+
             var yaw = player.rotation.eulerAngles.y;
             player.rotation = Quaternion.Euler(0f, yaw, 0f);
         }
+
+        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        if (keeper) keeper.ResetForNewRound();
     }
 
-    void Set(TMP_Text t, string s) { if (t) t.text = s; }
+    void Set(TMP_Text t, string s)
+    {
+        if (t) t.text = s;
+    }
 }

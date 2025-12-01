@@ -13,8 +13,8 @@ public class RealBallTracker3D : MonoBehaviour
     public float readInterval = 0.02f;
 
     [Header("Tamaño del campo en Unity (X,Z,Y)")]
-    public float fieldWidth  = 10f; // X
-    public float fieldDepth  = 5f;  // Z
+    public float fieldWidth = 10f;  // X
+    public float fieldDepth = 5f;   // Z
     public float fieldHeight = 3f;  // Y
 
     [Header("Origen del campo")]
@@ -22,13 +22,13 @@ public class RealBallTracker3D : MonoBehaviour
 
     [Header("Opciones")]
     public bool invertY = false;
-    public bool invertZ = true;    // seguramente lo tienes activado
-    public bool invertX = true;    // si detectaste X invertido
+    public bool invertZ = true;
+    public bool invertX = true;
     public bool smoothMovement = true;
     public float smoothSpeed = 20f;
 
     private Vector3 targetPosition;
-    private bool hasValidData = false; // ⬅ NUEVO
+    private bool hasValidData = false;
 
     void Start()
     {
@@ -38,7 +38,6 @@ public class RealBallTracker3D : MonoBehaviour
 
     void Update()
     {
-        // ⬅ No mover la pelota hasta tener datos reales
         if (!hasValidData)
             return;
 
@@ -71,9 +70,7 @@ public class RealBallTracker3D : MonoBehaviour
         float z = 0.5f;
         float y = 0.0f;
 
-        // ==========================
-        // LEER CAMARA DEL TECHO (X,Z)
-        // ==========================
+        // CAMARA TECHO (X,Z)
         if (File.Exists(fileTop))
         {
             try
@@ -86,19 +83,14 @@ public class RealBallTracker3D : MonoBehaviour
                     x = float.Parse(parts[0], CultureInfo.InvariantCulture);
                     z = float.Parse(parts[1], CultureInfo.InvariantCulture);
 
-                    if (invertX)
-                        x = 1f - x;
-
-                    if (invertZ)
-                        z = 1f - z;
+                    if (invertX) x = 1f - x;
+                    if (invertZ) z = 1f - z;
                 }
             }
             catch { }
         }
 
-        // ==========================
-        // LEER CAMARA LATERAL (Y)
-        // ==========================
+        // CAMARA LATERAL (Y)
         if (File.Exists(fileSide))
         {
             try
@@ -112,15 +104,15 @@ public class RealBallTracker3D : MonoBehaviour
             catch { }
         }
 
-        // ==========================
-        // MAPEAR A UNIDADES DE UNITY
-        // ==========================
-        float worldX = fieldOrigin.x + x * fieldWidth;
-        float worldZ = fieldOrigin.z + z * fieldDepth;
-        float worldY = fieldOrigin.y + y * fieldHeight;
+        // --------------- MAPEADO CORREGIDO ----------------
+        float worldX = fieldOrigin.x + (z * fieldWidth);   // ← usamos Z real para mover X Unity
+        float worldZ = fieldOrigin.z + (x * fieldDepth);   // ← usamos X real para mover Z Unity
+        float worldY = fieldOrigin.y + (y * fieldHeight);
+        // --------------------------------------------------
 
-        // ⬅ SOLO actualizar si son datos reales (no 0,0,0)
-        if (!(Mathf.Approximately(x, 0f) && Mathf.Approximately(y, 0f) && Mathf.Approximately(z, 0f)))
+        if (!(Mathf.Approximately(x, 0f) &&
+              Mathf.Approximately(y, 0f) &&
+              Mathf.Approximately(z, 0f)))
         {
             hasValidData = true;
             targetPosition = new Vector3(worldX, worldY, worldZ);

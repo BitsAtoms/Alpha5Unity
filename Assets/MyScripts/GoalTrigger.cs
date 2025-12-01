@@ -14,10 +14,27 @@ public class GoalTrigger : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (GameManager.I == null || !GameManager.I.CanShoot()) return;
-        if (!other.CompareTag(ballTag)) return;
+        Debug.Log($"[GoalTrigger] Algo entró: {other.name}, tag={other.tag}");
 
-        Debug.Log($"[GoalTrigger] GOOOL (obj: {other.name})");
+        if (other.CompareTag(ballTag) == false)
+        {
+            Debug.Log("[GoalTrigger] IGNORADO → No es la pelota");
+            return;
+        }
+
+        if (GameManager.I == null)
+        {
+            Debug.Log("[GoalTrigger] ERROR → GameManager.I es NULL");
+            return;
+        }
+
+        if (!GameManager.I.CanShoot())
+        {
+            Debug.Log("[GoalTrigger] IGNORADO → CanShoot() = false");
+            return;
+        }
+
+        Debug.Log($"[GoalTrigger] GOOOOL → obj={other.name}");
         GameManager.I.GoalScored();
     }
 
@@ -25,6 +42,7 @@ public class GoalTrigger : MonoBehaviour
     {
         if (!logOnStayForDebug) return;
         if (!other.CompareTag(ballTag)) return;
+
         Debug.Log($"[GoalTrigger] OnTriggerStay con {other.name}");
     }
 }
