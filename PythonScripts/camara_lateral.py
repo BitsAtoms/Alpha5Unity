@@ -17,7 +17,7 @@ CAM_INDEX = 0
 BALL_CLASS_ID = 32
 
 # ==============================
-# USAR CPU (MUY IMPORTANTE)
+# USAR CPU 
 # ==============================
 device = "cpu"
 print("Usando:", device)
@@ -27,7 +27,7 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), "yolo11n.pt")
 model = YOLO(MODEL_PATH).to(device)
 
 # ==============================
-# INICIALIZAR CÁMARA (OPTIMIZADO)
+# INICIALIZAR CÁMARA 
 # ==============================
 
 cap = cv2.VideoCapture(CAM_INDEX, cv2.CAP_DSHOW)
