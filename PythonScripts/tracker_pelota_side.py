@@ -21,7 +21,7 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_PATH = os.path.join(BASE_PATH, "Tracking", "AnimationFile_Side.txt")
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 
-CAM_INDEX = 0   # <- CORRECTO SEGÚN TU SCRIPT ORIGINAL
+CAM_INDEX = 1   # <- CORRECTO SEGÚN TU SCRIPT ORIGINAL
 BALL_CLASS_ID = 32
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "yolo11n.pt")
 
