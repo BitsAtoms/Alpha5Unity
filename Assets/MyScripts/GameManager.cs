@@ -7,23 +7,23 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager I;
 
+    // 🔥 AÑADIDO: alias para que LidarReceiver pueda usar GameManager.Instance
+    public static GameManager Instance => I;
+
     [Header("UI (TMP)")]
     public TMP_Text uiMessage;
     public TMP_Text uiScore;
     public TMP_Text uiAttempts;
 
-    [Header("Referencias")]
-    public BallController ball;
-    public Transform ballStartPoint;
-    public Transform player;
-    public Transform playerStartPoint;
 
     [Header("Reglas")]
-    public int maxAttempts = 4;
-    public float shotTimeout = 2f;
+    public int maxAttempts = 5;
+    public float shotTimeout = 1f;
 
     [Header("Tiempos")]
-    public float bannerDuration = 2.0f;
+    public float bannerDuration = 4.0f;
+    public BallController ball;
+
 
     int score = 0;
     int attempts = 0;
@@ -39,8 +39,8 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
-        Set(uiMessage, ""); 
-        Set(uiScore, ""); 
+        Set(uiMessage, "");
+        Set(uiScore, "");
         Set(uiAttempts, "");
     }
 
@@ -72,7 +72,6 @@ public class GameManager : MonoBehaviour
         return ok;
     }
 
-    // *** IMPORTANTE: Ahora NO depende de betweenRounds ***
     public void ArmShotWindow()
     {
         if (gameOver)
@@ -103,6 +102,15 @@ public class GameManager : MonoBehaviour
 
         score++;
         attempts++;
+        var popup = FindFirstObjectByType<PointsPopup>();
+        if (popup != null)
+            popup.ShowPoints(5);
+
+        // 🔥🔥🔥 AÑADIDO: si hay GOL → portero animación de decepción
+        var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
+        if (keeperAnim != null)
+            keeperAnim.PlayDisappointed();
+
         StartCoroutine(Co_RestartRound("¡GOL!"));
     }
 
@@ -115,6 +123,12 @@ public class GameManager : MonoBehaviour
         }
 
         attempts++;
+
+        // 🔥🔥🔥 AÑADIDO: si hay FALLO → portero animación de celebración
+        var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
+        if (keeperAnim != null)
+            keeperAnim.PlayCelebrate();
+
         StartCoroutine(Co_RestartRound("Has fallado"));
     }
 
@@ -125,23 +139,46 @@ public class GameManager : MonoBehaviour
     {
         shotArmed = false;
         shotTimer = 0f;
-
         betweenRounds = true;
 
         if (attempts >= maxAttempts)
         {
             gameOver = true;
+
             Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{maxAttempts}");
-            Set(uiScore, ""); 
+            Set(uiScore, "");
             Set(uiAttempts, "");
+
+            // Esperamos unos segundos antes de reiniciar todo
+            yield return new WaitForSeconds(3f);
+
+            // 🔥 Reiniciar variables internas del GameManager
+            score = 0;
+            attempts = 0;
+            gameOver = false;
+            betweenRounds = true;
+            shotArmed = false;
+            shotTimer = 0f;
+
+            // 🔥 Reset posiciones en el campo
+            ResetPositions();
+
+            // 🔥 Inicio del juego desde la primera ronda
+            yield return StartCoroutine(Co_StartRound());
             yield break;
         }
 
         Set(uiMessage, resultMsg);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(3f);
 
         Set(uiMessage, "");
         Set(uiScore, "");
+
+        // 🔥🔥🔥 AÑADIDO (NO MODIFICA NADA EXISTENTE)
+        // Avisamos al sistema progresivo en qué tiro vamos
+        var prog = FindFirstObjectByType<ProgressiveRoundController>();
+        if (prog != null)
+            prog.OnNewRound(attempts);
 
         ResetPositions();
         yield return StartCoroutine(Co_StartRound());
@@ -151,14 +188,12 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("[GM] Iniciando ronda...");
 
-        // *** ARREGLADO: YA se puede chutar desde el principio ***
         betweenRounds = false;
 
         Set(uiAttempts, $"Intento: {attempts + 1}/{maxAttempts}");
         Set(uiMessage, "Listo para chutar");
         Set(uiScore, $"Puntuación: {score}");
 
-        // El mensaje NO bloquea chutar
         yield return new WaitForSeconds(bannerDuration);
 
         Set(uiAttempts, "");
@@ -173,7 +208,8 @@ public class GameManager : MonoBehaviour
     // ============================
     void ResetPositions()
     {
-        if (ball && ballStartPoint)
+        // Reset solo para BallController (para colisiones de gol)
+        if (ball)
         {
             var rb = ball.GetComponent<Rigidbody>();
             if (rb)
@@ -181,30 +217,57 @@ public class GameManager : MonoBehaviour
                 rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
             }
-            ball.transform.position = ballStartPoint.position;
+
             ball.ResetFlags();
         }
 
-        if (player && playerStartPoint)
-        {
-            var prb = player.GetComponent<Rigidbody>();
-            if (prb)
-            {
-                prb.linearVelocity = Vector3.zero;
-                prb.angularVelocity = Vector3.zero;
-            }
-            player.position = playerStartPoint.position;
+        // Reset de la pelota real (tracking)
+        var tracker = FindFirstObjectByType<RealBallTracker3D>();
+        if (tracker)
+            tracker.ResetBallPosition();
 
-            var yaw = player.rotation.eulerAngles.y;
-            player.rotation = Quaternion.Euler(0f, yaw, 0f);
-        }
-
+        // Reset del portero
         var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
-        if (keeper) keeper.ResetForNewRound();
+        if (keeper)
+            keeper.ResetForNewRound();
     }
 
     void Set(TMP_Text t, string s)
     {
         if (t) t.text = s;
+    }
+
+    public void ResetRoundExternally()
+    {
+        if (betweenRounds || gameOver)
+            return;
+
+        // Esto impide que vuelva a marcar gol o fallo accidentalmente
+        shotArmed = false;
+
+        StartCoroutine(Co_RestartRound(""));
+    }
+
+    // ============================
+    // 🔥🔥🔥 AÑADIDO (LECTURA SEGURA)
+    // Permite saber en qué tiro vamos
+    // ============================
+    public int GetCurrentAttempt()
+    {
+        return attempts;
+    }
+
+    // ============================
+    // 🔥 AÑADIDO: PUNTOS POR DIANA
+    // ============================
+    public void AddTargetScore(int points)
+    {
+        score += points;
+
+        var popup = FindFirstObjectByType<PointsPopup>();
+        if (popup != null)
+            popup.ShowPoints(points);
+
+        Debug.Log($"[GM] Diana alcanzada +{points} puntos");
     }
 }

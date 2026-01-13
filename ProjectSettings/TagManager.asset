@@ -7,6 +7,7 @@ TagManager:
   - Ball
   - GoalNet
   - Goalkeeper
+  - Target
   layers:
   - Default
   - TransparentFX

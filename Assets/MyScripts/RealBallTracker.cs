@@ -16,9 +16,9 @@ public class RealBallTracker3D : MonoBehaviour
     public float readInterval = 0.02f;
 
     [Header("Tamaño del campo en Unity (X,Z,Y)")]
-    public float fieldWidth = 10f;  // X
-    public float fieldDepth = 5f;   // Z
-    public float fieldHeight = 3f;  // Y
+    public float fieldWidth = 10f;
+    public float fieldDepth = 5f;
+    public float fieldHeight = 3f;
 
     [Header("Origen del campo")]
     public Vector3 fieldOrigin = new Vector3(-5f, 0.11f, -2.5f);
@@ -28,43 +28,56 @@ public class RealBallTracker3D : MonoBehaviour
     public bool invertY = false;
     public bool invertZ = true;
 
+    [Header("Intercambiar ejes (Swap)")]
+    public bool swapXZ = false;
+    public bool swapXY = false;
+    public bool swapYZ = false;
+
     [Header("Opciones de suavizado")]
     public bool smoothMovement = true;
     public float smoothSpeed = 20f;
 
     private Vector3 targetPosition;
-    private bool hasValidData = false;
+
+    // 🔥 CONTROL DE ESTADOS
+    private bool allowTracking = false;
+    private bool hasFirstValidData = false;
+
+    // 🔥 POSICIÓN INICIAL FIJA
+    private Vector3 fixedStartPosition = new Vector3(1846.75f, 2.25f, 1822.52f);
+
+    // ====================================================
+    // 🔥🔥🔥 AÑADIDO — DETECCIÓN DE INICIO DE TIRO (EJE X)
+    // ====================================================
+    [Header("Detección inicio de tiro")]
+    public float shotDetectThresholdX = 0.05f; // 5 cm
+    private float startX;
+    private bool shotDetected = false;
 
     void Start()
     {
-        // ===========================
-        // DETECTAR RUTA FINAL
-        // ===========================
-        string basePath;
-
-#if UNITY_EDITOR
-        // CUANDO ESTÁS EN EL EDITOR → usa la carpeta del proyecto
-        basePath = Path.Combine(Application.dataPath, "../Tracking");
-#else
-        // CUANDO ESTÁS EN EL .EXE → usa la carpeta donde está el ejecutable
-        basePath = Path.Combine(Application.dataPath, "../Tracking");
-#endif
-
+        string basePath = Path.Combine(Application.dataPath, "../Tracking");
         topFilePath = Path.Combine(basePath, topFileName);
         sideFilePath = Path.Combine(basePath, sideFileName);
 
-        Debug.Log("[RBT] Usando rutas:");
-        Debug.Log("[RBT] TOP = " + topFilePath);
-        Debug.Log("[RBT] SIDE = " + sideFilePath);
+        // Colocar pelota en el inicio fijo
+        transform.position = fixedStartPosition;
+        targetPosition = fixedStartPosition;
 
-        targetPosition = transform.position;
+        hasFirstValidData = false;
+        allowTracking = false;
+
+        // 🔥 AÑADIDO
+        startX = fixedStartPosition.x;
+        shotDetected = false;
 
         StartCoroutine(ReadLoop());
+        StartCoroutine(EnableTracking());
     }
 
     void Update()
     {
-        if (!hasValidData)
+        if (!allowTracking || !hasFirstValidData)
             return;
 
         if (smoothMovement)
@@ -79,6 +92,31 @@ public class RealBallTracker3D : MonoBehaviour
         {
             transform.position = targetPosition;
         }
+
+        // ====================================================
+        // 🔥🔥🔥 AÑADIDO — DETECTAR MOVIMIENTO EN X
+        // ====================================================
+        if (!shotDetected)
+        {
+            float deltaX = Mathf.Abs(transform.position.x - startX);
+
+            if (deltaX > shotDetectThresholdX)
+            {
+                shotDetected = true;
+                Debug.Log("[RBT] Movimiento en X detectado → inicio de tiro");
+
+                if (GameManager.Instance != null && GameManager.Instance.CanShoot())
+                {
+                    GameManager.Instance.ArmShotWindow();
+                }
+
+                var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+                if (keeper != null)
+                {
+                    keeper.OnShotDetected(0f);
+                }
+            }
+        }
     }
 
     IEnumerator ReadLoop()
@@ -90,21 +128,28 @@ public class RealBallTracker3D : MonoBehaviour
         }
     }
 
+    private IEnumerator EnableTracking()
+    {
+        yield return new WaitForSeconds(0.3f);
+        allowTracking = true;
+        Debug.Log("[RBT] Tracking habilitado");
+    }
+
     void ReadAndUpdate()
     {
-        float x = 0.5f;
-        float z = 0.5f;
-        float y = 0.0f;
+        if (!allowTracking)
+            return;
 
-        // ===================================
-        // LEER CAMARA DEL TECHO (X,Z)
-        // ===================================
+        float x = -1f;
+        float y = -1f;
+        float z = -1f;
+
         if (File.Exists(topFilePath))
         {
             try
             {
                 string textTop = File.ReadAllText(topFilePath).Trim();
-                string[] parts = textTop.Split(',', ';');
+                var parts = textTop.Split(',', ';');
 
                 if (parts.Length >= 2)
                 {
@@ -118,9 +163,6 @@ public class RealBallTracker3D : MonoBehaviour
             catch { }
         }
 
-        // ===================================
-        // LEER CAMARA LATERAL (Y)
-        // ===================================
         if (File.Exists(sideFilePath))
         {
             try
@@ -133,20 +175,52 @@ public class RealBallTracker3D : MonoBehaviour
             catch { }
         }
 
-        // ===================================
-        // MAPEAR A UNIDADES DE UNITY
-        // ===================================
+        if (x < 0 || y < 0 || z < 0)
+            return;
+
+        if (swapXZ) (x, z) = (z, x);
+        if (swapXY) (x, y) = (y, x);
+        if (swapYZ) (y, z) = (z, y);
+
         float worldX = fieldOrigin.x + x * fieldWidth;
         float worldZ = fieldOrigin.z + z * fieldDepth;
         float worldY = fieldOrigin.y + y * fieldHeight;
 
-        // Evitar que mueva la pelota con valores basura
-        if (!(Mathf.Approximately(x, 0f) &&
-              Mathf.Approximately(y, 0f) &&
-              Mathf.Approximately(z, 0f)))
+        if (!hasFirstValidData)
         {
-            hasValidData = true;
-            targetPosition = new Vector3(worldX, worldY, worldZ);
+            hasFirstValidData = true;
+            Debug.Log("[RBT] Primer dato válido detectado");
         }
+
+        targetPosition = new Vector3(worldX, worldY, worldZ);
+    }
+
+    // ====================================================
+    // RESET PARA NUEVA RONDA
+    // ====================================================
+    public void ResetBallPosition()
+    {
+        StopAllCoroutines();
+
+        allowTracking = false;
+        hasFirstValidData = false;
+
+        transform.position = fixedStartPosition;
+        targetPosition = fixedStartPosition;
+
+        // 🔥 AÑADIDO
+        startX = fixedStartPosition.x;
+        shotDetected = false;
+
+        StartCoroutine(ReadLoop());
+        StartCoroutine(EnableTracking());
+
+        Debug.Log("[RBT] Pelota reseteada al punto inicial.");
+        var returnZone = FindFirstObjectByType<BallReturnTrigger>();
+            if (returnZone != null)
+            {
+                returnZone.ResetTrigger();
+            }
+
     }
 }
