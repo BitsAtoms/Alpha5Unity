@@ -924,7 +924,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
-  points: 25
+  points: 5
+  maxHitDistance: 0.45
 --- !u!1001 &30015463
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2179,7 +2180,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
-  points: 25
+  points: 5
+  maxHitDistance: 0.45
 --- !u!1001 &67936271
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3888,10 +3890,11 @@ MonoBehaviour:
   uiMessage: {fileID: 994646875}
   uiScore: {fileID: 481406071}
   uiAttempts: {fileID: 47484664}
+  ball: {fileID: 0}
+  ballStartPoint: {fileID: 0}
   maxAttempts: 5
   shotTimeout: 2
   bannerDuration: 3
-  ball: {fileID: 0}
 --- !u!4 &112104997
 Transform:
   m_ObjectHideFlags: 0
@@ -5393,7 +5396,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: ce05785725d8ded469dd6c65bdd9f7d5,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.85
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ce05785725d8ded469dd6c65bdd9f7d5,
         type: 3}
@@ -5448,13 +5451,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: ce05785725d8ded469dd6c65bdd9f7d5,
         type: 3}
       propertyPath: m_WarningMessage
-      value: "\nBinding warning: Some generic clip(s) animate transforms that are
-        already bound by a Humanoid avatar. These transforms can only be changed
-        by Humanoid clips.\n\tTransform 'mixamorig:Hips'\n\tTransform 'mixamorig:LeftFoot'\n\tTransform
-        'mixamorig:LeftHandThumb2'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform
-        'mixamorig:RightHandRing2'\n\tTransform 'mixamorig:Spine1'\n\tTransform 'mixamorig:LeftToeBase'\n\tTransform
-        'mixamorig:LeftHandThumb3'\n\tTransform 'mixamorig:RightArm'\n\tTransform
-        'mixamorig:LeftLeg'\n\tand more ...\n\tFrom animation clip 'mixamo.com'"
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7070,7 +7067,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
-  points: 25
+  points: 5
+  maxHitDistance: 0.45
 --- !u!1001 &277163245
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9404,7 +9402,7 @@ PrefabInstance:
     - target: {fileID: 4698717884910176097, guid: c92f34a05ad69814ab379a90227f7eaf,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1839.62
+      value: 1843.25
       objectReference: {fileID: 0}
     - target: {fileID: 4698717884910176097, guid: c92f34a05ad69814ab379a90227f7eaf,
         type: 3}
@@ -17107,7 +17105,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -72.7}
+  m_AnchoredPosition: {x: 38.5, y: 146.6}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &698094320
@@ -17130,7 +17128,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: + 5
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17139,7 +17137,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4279172960
   m_fontColor: {r: 0.37506884, g: 1, b: 0.05345905, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -17222,7 +17220,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PointsPopup
   text: {fileID: 698094320}
+  rect: {fileID: 698094319}
   duration: 1.5
+  floatPixels: 80
 --- !u!1001 &703105627
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23745,7 +23745,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
-  points: 25
+  points: 5
+  maxHitDistance: 0.45
 --- !u!1001 &1010790768
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26979,7 +26980,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
-  points: 25
+  points: 5
+  maxHitDistance: 0.45
 --- !u!1001 &1156182798
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -29388,7 +29390,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 4, y: 2, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: -0.5, z: 0}
 --- !u!23 &1314431934
 MeshRenderer:
   m_ObjectHideFlags: 0

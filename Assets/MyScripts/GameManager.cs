@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager I;
 
-    // 🔥 AÑADIDO: alias para que LidarReceiver pueda usar GameManager.Instance
+    // alias para compatibilidad con scripts que usan GameManager.Instance
     public static GameManager Instance => I;
 
     [Header("UI (TMP)")]
@@ -15,6 +15,13 @@ public class GameManager : MonoBehaviour
     public TMP_Text uiScore;
     public TMP_Text uiAttempts;
 
+    [Header("Referencias")]
+    public BallController ball;
+
+    [Header("Reset Pelota (WASD)")]
+    public Transform ballStartPoint; // si lo asignas, la pelota se resetea aquí
+    private Vector3 ballStartPos;
+    private Quaternion ballStartRot;
 
     [Header("Reglas")]
     public int maxAttempts = 5;
@@ -22,8 +29,6 @@ public class GameManager : MonoBehaviour
 
     [Header("Tiempos")]
     public float bannerDuration = 4.0f;
-    public BallController ball;
-
 
     int score = 0;
     int attempts = 0;
@@ -39,6 +44,22 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
+
+        // Guardar posición inicial de la pelota para reset (si no hay StartPoint)
+        if (ball != null)
+        {
+            if (ballStartPoint != null)
+            {
+                ballStartPos = ballStartPoint.position;
+                ballStartRot = ballStartPoint.rotation;
+            }
+            else
+            {
+                ballStartPos = ball.transform.position;
+                ballStartRot = ball.transform.rotation;
+            }
+        }
+
         Set(uiMessage, "");
         Set(uiScore, "");
         Set(uiAttempts, "");
@@ -102,11 +123,12 @@ public class GameManager : MonoBehaviour
 
         score++;
         attempts++;
-        var popup = FindFirstObjectByType<PointsPopup>();
-        if (popup != null)
-            popup.ShowPoints(5);
 
-        // 🔥🔥🔥 AÑADIDO: si hay GOL → portero animación de decepción
+        // IMPORTANTE:
+        // Quitamos el popup de puntos aquí para que NO salga al marcar gol.
+        // El popup SOLO debe salir desde AddTargetScore() cuando se toca una diana.
+
+        // Portero: si hay GOL → decepción (si tu GK lo tiene)
         var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeperAnim != null)
             keeperAnim.PlayDisappointed();
@@ -124,7 +146,7 @@ public class GameManager : MonoBehaviour
 
         attempts++;
 
-        // 🔥🔥🔥 AÑADIDO: si hay FALLO → portero animación de celebración
+        // Portero: si hay FALLO → celebración (si tu GK lo tiene)
         var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeperAnim != null)
             keeperAnim.PlayCelebrate();
@@ -149,10 +171,9 @@ public class GameManager : MonoBehaviour
             Set(uiScore, "");
             Set(uiAttempts, "");
 
-            // Esperamos unos segundos antes de reiniciar todo
             yield return new WaitForSeconds(3f);
 
-            // 🔥 Reiniciar variables internas del GameManager
+            // Reiniciar variables internas
             score = 0;
             attempts = 0;
             gameOver = false;
@@ -160,10 +181,8 @@ public class GameManager : MonoBehaviour
             shotArmed = false;
             shotTimer = 0f;
 
-            // 🔥 Reset posiciones en el campo
             ResetPositions();
 
-            // 🔥 Inicio del juego desde la primera ronda
             yield return StartCoroutine(Co_StartRound());
             yield break;
         }
@@ -174,8 +193,7 @@ public class GameManager : MonoBehaviour
         Set(uiMessage, "");
         Set(uiScore, "");
 
-        // 🔥🔥🔥 AÑADIDO (NO MODIFICA NADA EXISTENTE)
-        // Avisamos al sistema progresivo en qué tiro vamos
+        // Aviso progresivo
         var prog = FindFirstObjectByType<ProgressiveRoundController>();
         if (prog != null)
             prog.OnNewRound(attempts);
@@ -208,7 +226,7 @@ public class GameManager : MonoBehaviour
     // ============================
     void ResetPositions()
     {
-        // Reset solo para BallController (para colisiones de gol)
+        // Reset de pelota (WASD)
         if (ball)
         {
             var rb = ball.GetComponent<Rigidbody>();
@@ -218,18 +236,22 @@ public class GameManager : MonoBehaviour
                 rb.angularVelocity = Vector3.zero;
             }
 
+            // reset posición/rotación
+            ball.transform.position = ballStartPos;
+            ball.transform.rotation = ballStartRot;
+
             ball.ResetFlags();
         }
-
-        // Reset de la pelota real (tracking)
-        var tracker = FindFirstObjectByType<RealBallTracker3D>();
-        if (tracker)
-            tracker.ResetBallPosition();
 
         // Reset del portero
         var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeper)
             keeper.ResetForNewRound();
+
+        // ✅ Resetear dianas por ronda (evita bugs de puntos “fantasma”)
+        var targets = FindObjectsByType<TargetScore>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var t in targets)
+            t.ResetForNewRound();
     }
 
     void Set(TMP_Text t, string s)
@@ -242,15 +264,12 @@ public class GameManager : MonoBehaviour
         if (betweenRounds || gameOver)
             return;
 
-        // Esto impide que vuelva a marcar gol o fallo accidentalmente
         shotArmed = false;
-
         StartCoroutine(Co_RestartRound(""));
     }
 
     // ============================
-    // 🔥🔥🔥 AÑADIDO (LECTURA SEGURA)
-    // Permite saber en qué tiro vamos
+    // LECTURA SEGURA
     // ============================
     public int GetCurrentAttempt()
     {
@@ -258,13 +277,14 @@ public class GameManager : MonoBehaviour
     }
 
     // ============================
-    // 🔥 AÑADIDO: PUNTOS POR DIANA
+    // PUNTOS POR DIANA
     // ============================
     public void AddTargetScore(int points)
     {
+        Debug.Log("[GM] AddTargetScore(" + points + ") CALLED BY:\n" + System.Environment.StackTrace);
         score += points;
 
-        var popup = FindFirstObjectByType<PointsPopup>();
+        var popup = FindFirstObjectByType<PointsPopup>(FindObjectsInactive.Include);
         if (popup != null)
             popup.ShowPoints(points);
 

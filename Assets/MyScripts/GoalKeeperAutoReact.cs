@@ -122,12 +122,8 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
     private void ElegirMovimiento()
     {
-        int r = Random.Range(0, 3);
-
-        int diveValue = DIR_IDLE;
-        if (r == 0) diveValue = DIR_LEFT;
-        else if (r == 2) diveValue = DIR_RIGHT;
-        else diveValue = DIR_IDLE;
+        // ✅ 1,2,3 (3 incluido)
+        int diveValue = Random.Range(1, 4);
 
         if (animator != null)
         {
@@ -137,12 +133,15 @@ public class GoalkeeperAutoReact : MonoBehaviour
             Debug.Log("[GK] DiveDirection=" + diveValue);
         }
 
-        if (moverBase)
+        // ✅ Movimiento extra solo para 1 y 2 (izquierda/derecha)
+        // Si es 3 (Jump), no movemos la base
+        if (moverBase && (diveValue == 1 || diveValue == 2))
         {
             StopAllCoroutines();
             StartCoroutine(MoverBaseExtra(diveValue));
         }
     }
+
 
     private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
     {
