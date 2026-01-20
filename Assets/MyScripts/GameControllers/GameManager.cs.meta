@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: dea00e46c6080834e90345321c4acf4d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - config: {fileID: 11400000, guid: 3e73df9136a56b543869fa60f1fcbd53, type: 2}
+  - uiMessage: {instanceID: 0}
+  - uiScore: {instanceID: 0}
+  - uiAttempts: {instanceID: 0}
+  - ball: {instanceID: 0}
+  - ballStartPoint: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

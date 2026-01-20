@@ -6,9 +6,10 @@ using System.Collections;
 public class GameManager : MonoBehaviour
 {
     public static GameManager I;
-
-    // alias para compatibilidad con scripts que usan GameManager.Instance
     public static GameManager Instance => I;
+
+    [Header("Config")]
+    public GameConfig config;
 
     [Header("UI (TMP)")]
     public TMP_Text uiMessage;
@@ -19,24 +20,21 @@ public class GameManager : MonoBehaviour
     public BallController ball;
 
     [Header("Reset Pelota (WASD)")]
-    public Transform ballStartPoint; // si lo asignas, la pelota se resetea aquí
-    private Vector3 ballStartPos;
-    private Quaternion ballStartRot;
-
-    [Header("Reglas")]
-    public int maxAttempts = 5;
-    public float shotTimeout = 1f;
-
-    [Header("Tiempos")]
-    public float bannerDuration = 4.0f;
+    public Transform ballStartPoint;
 
     int score = 0;
     int attempts = 0;
 
     bool shotArmed = false;
     float shotTimer = 0f;
-    bool betweenRounds = true;
-    bool gameOver = false;
+
+    GameState state = GameState.WaitingForBall;
+
+    Vector3 ballStartPos;
+    Quaternion ballStartRot;
+
+    // 🔥 AÑADIDO: para empezar con botón Start
+    bool started = false;
 
     void OnEnable() { I = this; }
     void OnDisable() { if (I == this) I = null; }
@@ -45,7 +43,6 @@ public class GameManager : MonoBehaviour
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
 
-        // Guardar posición inicial de la pelota para reset (si no hay StartPoint)
         if (ball != null)
         {
             if (ballStartPoint != null)
@@ -63,57 +60,91 @@ public class GameManager : MonoBehaviour
         Set(uiMessage, "");
         Set(uiScore, "");
         Set(uiAttempts, "");
+
+        state = GameState.WaitingForBall;
+
+        // 🔥 AÑADIDO
+        started = false;
+        Debug.Log("[GM] Esperando START...");
     }
 
     void Start()
     {
+        // 🔥 ya NO arranca solo
+        // BeginGame() se llamará desde el botón Start
+    }
+
+    // 🔥 AÑADIDO: lo llama el botón Start
+    public void BeginGame()
+    {
+        if (started) return;
+        started = true;
+
+        Debug.Log("[GM] BeginGame() -> empezando partida");
+
+        ApplyModeIfAny();
         ResetPositions();
         StartCoroutine(Co_StartRound());
     }
 
+    void ApplyModeIfAny()
+    {
+        if (GameSettings.I == null) return;
+
+        if (GameSettings.I.Mode == GameMode.Nino)
+        {
+            var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+            if (keeper != null)
+                keeper.moveSpeed *= 0.7f;
+        }
+    }
+
     void Update()
     {
-        if (gameOver || betweenRounds) return;
+        if (!started) return;
+
+        if (state != GameState.ShotInProgress) return;
 
         if (shotArmed)
         {
             shotTimer += Time.deltaTime;
-            if (shotTimer >= shotTimeout)
+            if (shotTimer >= GetShotTimeout())
                 ShotFail();
         }
     }
 
-    // ============================
-    //         ESTADO TIRO
-    // ============================
     public bool CanShoot()
     {
-        bool ok = !betweenRounds && !gameOver;
-        Debug.Log($"[GM] CanShoot() = {ok} | betweenRounds={betweenRounds} | gameOver={gameOver} | shotArmed={shotArmed}");
+        bool ok = (state == GameState.ReadyToShoot || state == GameState.ShotInProgress);
+        Debug.Log($"[GM] CanShoot() = {ok} | state={state} | shotArmed={shotArmed}");
         return ok;
     }
 
     public void ArmShotWindow()
     {
-        if (gameOver)
+        if (!started) return;
+
+        if (state == GameState.EndGame)
         {
             Debug.Log("[GM] ArmShotWindow() IGNORADO → Juego terminado");
             return;
         }
 
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
+            return;
+
         shotArmed = true;
         shotTimer = 0f;
+
         ball?.ResetFlags();
 
-        Debug.Log("[GM] Ventana de tiro ACTIVADA por 2 segundos");
+        state = GameState.ShotInProgress;
+        Debug.Log("[GM] Ventana de tiro ACTIVADA");
     }
 
-    // ============================
-    //           RESULTADOS
-    // ============================
     public void GoalScored()
     {
-        Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed}");
+        Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed} | state={state}");
 
         if (!shotArmed)
         {
@@ -121,14 +152,12 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        shotArmed = false;
+        shotTimer = 0f;
+
         score++;
         attempts++;
 
-        // IMPORTANTE:
-        // Quitamos el popup de puntos aquí para que NO salga al marcar gol.
-        // El popup SOLO debe salir desde AddTargetScore() cuando se toca una diana.
-
-        // Portero: si hay GOL → decepción (si tu GK lo tiene)
         var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeperAnim != null)
             keeperAnim.PlayDisappointed();
@@ -138,15 +167,19 @@ public class GameManager : MonoBehaviour
 
     public void ShotFail()
     {
+        Debug.Log($"[GM] ShotFail() | shotArmed={shotArmed} | state={state}");
+
         if (!shotArmed)
         {
             Debug.Log("[GM] ShotFail() IGNORADO → shotArmed = false");
             return;
         }
 
+        shotArmed = false;
+        shotTimer = 0f;
+
         attempts++;
 
-        // Portero: si hay FALLO → celebración (si tu GK lo tiene)
         var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeperAnim != null)
             keeperAnim.PlayCelebrate();
@@ -154,46 +187,36 @@ public class GameManager : MonoBehaviour
         StartCoroutine(Co_RestartRound("Has fallado"));
     }
 
-    // ============================
-    //           RONDAS
-    // ============================
     IEnumerator Co_RestartRound(string resultMsg)
     {
-        shotArmed = false;
-        shotTimer = 0f;
-        betweenRounds = true;
+        state = GameState.ShowingResult;
 
-        if (attempts >= maxAttempts)
+        if (attempts >= GetMaxAttempts())
         {
-            gameOver = true;
+            state = GameState.EndGame;
 
-            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{maxAttempts}");
+            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{GetMaxAttempts()}");
             Set(uiScore, "");
             Set(uiAttempts, "");
 
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(GetEndGameRestartDelay());
 
-            // Reiniciar variables internas
             score = 0;
             attempts = 0;
-            gameOver = false;
-            betweenRounds = true;
             shotArmed = false;
             shotTimer = 0f;
 
             ResetPositions();
-
             yield return StartCoroutine(Co_StartRound());
             yield break;
         }
 
         Set(uiMessage, resultMsg);
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(GetResultDisplayDuration());
 
         Set(uiMessage, "");
         Set(uiScore, "");
 
-        // Aviso progresivo
         var prog = FindFirstObjectByType<ProgressiveRoundController>();
         if (prog != null)
             prog.OnNewRound(attempts);
@@ -206,27 +229,33 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("[GM] Iniciando ronda...");
 
-        betweenRounds = false;
+        state = GameState.ReadyToShoot;
 
-        Set(uiAttempts, $"Intento: {attempts + 1}/{maxAttempts}");
+        Set(uiAttempts, $"Intento: {attempts + 1}/{GetMaxAttempts()}");
         Set(uiMessage, "Listo para chutar");
         Set(uiScore, $"Puntuación: {score}");
 
-        yield return new WaitForSeconds(bannerDuration);
+        yield return new WaitForSeconds(GetBannerDuration());
 
         Set(uiAttempts, "");
         Set(uiMessage, "");
         Set(uiScore, "");
 
         Debug.Log("[GM] Ronda lista → Se puede chutar");
+
+        // =========================================================
+        // 🔥🔥🔥 AÑADIDO: EN CADA NUEVA RONDA, PORTERO HACE 1 ANIMACIÓN
+        // si el TXT está en 1 (externalMoveAllowed=true)
+        // =========================================================
+        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        if (keeper != null)
+        {
+            keeper.TriggerRandomDiveThisRound_NoShotWindow();
+        }
     }
 
-    // ============================
-    //        RESET POSICIONES
-    // ============================
     void ResetPositions()
     {
-        // Reset de pelota (WASD)
         if (ball)
         {
             var rb = ball.GetComponent<Rigidbody>();
@@ -236,19 +265,16 @@ public class GameManager : MonoBehaviour
                 rb.angularVelocity = Vector3.zero;
             }
 
-            // reset posición/rotación
             ball.transform.position = ballStartPos;
             ball.transform.rotation = ballStartRot;
 
             ball.ResetFlags();
         }
 
-        // Reset del portero
         var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeper)
             keeper.ResetForNewRound();
 
-        // ✅ Resetear dianas por ronda (evita bugs de puntos “fantasma”)
         var targets = FindObjectsByType<TargetScore>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var t in targets)
             t.ResetForNewRound();
@@ -261,27 +287,22 @@ public class GameManager : MonoBehaviour
 
     public void ResetRoundExternally()
     {
-        if (betweenRounds || gameOver)
+        if (!started) return;
+
+        if (state == GameState.ShowingResult || state == GameState.EndGame)
             return;
 
         shotArmed = false;
         StartCoroutine(Co_RestartRound(""));
     }
 
-    // ============================
-    // LECTURA SEGURA
-    // ============================
     public int GetCurrentAttempt()
     {
         return attempts;
     }
 
-    // ============================
-    // PUNTOS POR DIANA
-    // ============================
     public void AddTargetScore(int points)
     {
-        Debug.Log("[GM] AddTargetScore(" + points + ") CALLED BY:\n" + System.Environment.StackTrace);
         score += points;
 
         var popup = FindFirstObjectByType<PointsPopup>(FindObjectsInactive.Include);
@@ -290,4 +311,10 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"[GM] Diana alcanzada +{points} puntos");
     }
+
+    int GetMaxAttempts() => config ? config.maxAttempts : 5;
+    float GetShotTimeout() => config ? config.shotTimeout : 1f;
+    float GetBannerDuration() => config ? config.bannerDuration : 4f;
+    float GetResultDisplayDuration() => config ? config.resultDisplayDuration : 3f;
+    float GetEndGameRestartDelay() => config ? config.endGameRestartDelay : 3f;
 }

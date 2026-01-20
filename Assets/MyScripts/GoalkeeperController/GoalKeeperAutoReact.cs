@@ -38,7 +38,7 @@ public class GoalkeeperAutoReact : MonoBehaviour
     private bool keeperReactedThisRound = false;
 
     // ====================================================
-    // 🔥 AÑADIDO: valores para animaciones por resultado
+    // 🔥 Valores para animaciones
     // ====================================================
     private const int DIR_IDLE = 0;
     private const int DIR_LEFT = 1;
@@ -46,6 +46,43 @@ public class GoalkeeperAutoReact : MonoBehaviour
     private const int DIR_JUMP = 3;
     private const int DIR_CELEBRATE = 4;     // jugador falla
     private const int DIR_DISAPPOINTED = 5;  // jugador marca gol
+
+    // ====================================================
+    // 🔥🔥🔥 CONTROL EXTERNO POR TXT (0/1)
+    // ====================================================
+    [Header("Control externo (TXT)")]
+    public bool externalMoveAllowed = true;  // lo cambia KeeperMoveFlagReader
+
+    // ✅ AÑADIDO: candado central
+    private bool AllowMove()
+    {
+        if (!externalMoveAllowed)
+        {
+            // Debug mínimo para no spamear, pero útil si algo intenta moverlo
+            // (si quieres más, puedes activar logs aquí)
+            return false;
+        }
+        return true;
+    }
+
+    public void SetExternalMoveAllowed(bool allow)
+    {
+        externalMoveAllowed = allow;
+        Debug.Log("[GK] externalMoveAllowed=" + externalMoveAllowed);
+
+        // ✅ SI EL TXT PASA A 0: paramos TODO movimiento/animación de dive y volvemos a Idle
+        if (!externalMoveAllowed)
+        {
+            StopAllCoroutines();
+
+            if (animator != null)
+            {
+                animator.applyRootMotion = true;
+                animator.SetInteger(DiveDir, DIR_IDLE);
+                animator.Update(0f);
+            }
+        }
+    }
 
     void Start()
     {
@@ -81,6 +118,9 @@ public class GoalkeeperAutoReact : MonoBehaviour
     {
         if (ball == null) return;
 
+        // ✅ CANDADO: si TXT=0, jamás reaccionar por movimiento de pelota
+        if (!AllowMove()) return;
+
         // ✅ si ya reaccionó esta ronda, no hacemos nada más
         if (keeperReactedThisRound) return;
 
@@ -102,7 +142,6 @@ public class GoalkeeperAutoReact : MonoBehaviour
                     if (GameManager.I != null)
                         GameManager.I.ArmShotWindow();
 
-                    // ✅ reaccionar una sola vez por ronda
                     TriggerKeeperReactionOnce();
                 }
             }
@@ -114,6 +153,9 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
     private void TriggerKeeperReactionOnce()
     {
+        // ✅ CANDADO extra por seguridad
+        if (!AllowMove()) return;
+
         if (keeperReactedThisRound) return;
         keeperReactedThisRound = true;
 
@@ -122,6 +164,9 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
     private void ElegirMovimiento()
     {
+        // ✅ CANDADO extra por seguridad
+        if (!AllowMove()) return;
+
         // ✅ 1,2,3 (3 incluido)
         int diveValue = Random.Range(1, 4);
 
@@ -134,17 +179,18 @@ public class GoalkeeperAutoReact : MonoBehaviour
         }
 
         // ✅ Movimiento extra solo para 1 y 2 (izquierda/derecha)
-        // Si es 3 (Jump), no movemos la base
-        if (moverBase && (diveValue == 1 || diveValue == 2))
+        if (moverBase && (diveValue == DIR_LEFT || diveValue == DIR_RIGHT))
         {
             StopAllCoroutines();
             StartCoroutine(MoverBaseExtra(diveValue));
         }
     }
 
-
     private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
     {
+        // ✅ CANDADO extra por seguridad
+        if (!AllowMove()) yield break;
+
         Vector3 destino = baseStartLocalPos;
 
         if (diveValue == DIR_LEFT)
@@ -157,6 +203,9 @@ public class GoalkeeperAutoReact : MonoBehaviour
         float t = 0f;
         while (t < 1f)
         {
+            // ✅ si en mitad del movimiento el TXT pasa a 0, cortamos
+            if (!AllowMove()) yield break;
+
             t += Time.deltaTime * moveSpeed;
             portero.localPosition = Vector3.Lerp(inicio, destino, t);
             yield return null;
@@ -199,6 +248,9 @@ public class GoalkeeperAutoReact : MonoBehaviour
     // Para activación externa (cámara/LiDAR)
     public void OnShotDetected(float dummySpeed)
     {
+        // ✅ TXT manda: si 0, no se mueve
+        if (!AllowMove()) return;
+
         if (keeperReactedThisRound) return;
 
         shotDetectedThisRound = true;
@@ -210,20 +262,44 @@ public class GoalkeeperAutoReact : MonoBehaviour
     }
 
     // ====================================================
-    // 🔥🔥🔥 AÑADIDO: ANIMACIONES POR RESULTADO
+    // ✅ AL INICIO DE CADA RONDA, 1 ANIMACIÓN RANDOM + TIMEOUT
     // ====================================================
+    public void TriggerRandomDiveThisRound_NoShotWindow()
+    {
+        // ✅ TXT manda: si 0, no se mueve
+        if (!AllowMove())
+        {
+            Debug.Log("[GK] TriggerRandomDiveThisRound_NoShotWindow IGNORADO (TXT=0)");
+            return;
+        }
 
-    // Cuando el jugador FALLA → portero celebra
- // Cuando el jugador FALLA → portero celebra
+        if (keeperReactedThisRound)
+        {
+            Debug.Log("[GK] TriggerRandomDiveThisRound_NoShotWindow IGNORADO (ya reaccionó esta ronda)");
+            return;
+        }
+
+        keeperReactedThisRound = true;
+
+        // ✅ arrancar timeout de fallo (si quieres)
+        if (GameManager.I != null)
+            GameManager.I.ArmShotWindow();
+
+        ElegirMovimiento();
+        Debug.Log("[GK] TriggerRandomDiveThisRound_NoShotWindow OK");
+    }
+
+    // ====================================================
+    // 🔥 ANIMACIONES POR RESULTADO (NO dependen del TXT)
+    // ====================================================
     public void PlayCelebrate()
     {
         if (animator == null) return;
 
-        // 🔥 fuerza animación de resultado aunque ya haya reaccionado esta ronda
         keeperReactedThisRound = true;
         shotDetectedThisRound = true;
 
-        StopAllCoroutines(); // evita que un movimiento anterior pise la pose
+        StopAllCoroutines();
 
         animator.applyRootMotion = true;
         animator.SetInteger(DiveDir, DIR_CELEBRATE);
@@ -232,16 +308,14 @@ public class GoalkeeperAutoReact : MonoBehaviour
         Debug.Log("[GK] Celebrate (DiveDirection=4)");
     }
 
-    // Cuando el jugador MARCA GOL → portero decepcionado
     public void PlayDisappointed()
     {
         if (animator == null) return;
 
-        // 🔥 fuerza animación de resultado aunque ya haya reaccionado esta ronda
         keeperReactedThisRound = true;
         shotDetectedThisRound = true;
 
-        StopAllCoroutines(); // evita que un movimiento anterior pise la pose
+        StopAllCoroutines();
 
         animator.applyRootMotion = true;
         animator.SetInteger(DiveDir, DIR_DISAPPOINTED);

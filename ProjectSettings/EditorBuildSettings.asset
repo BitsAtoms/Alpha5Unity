@@ -11,19 +11,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MenuPrincipal.unity
     guid: 5981c94381ac7b84bafafb39757f5075
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Campo_Facil.unity
     guid: 2d509c57b313b9b45ba306ee45abfffb
   - enabled: 1
     path: Assets/Scenes/ProyectoFinalFinal.unity
     guid: adb69fa4de1e60f4bb6724c323dd8913
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Campo_Dificil.unity
     guid: 26572b8a441d40d4897572a694a10b52
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Campo_Loco.unity
     guid: e7388a73fe7ce7b4bb6b239ed59a42a5
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Campo_Progresivo.unity
     guid: 6b4686da537697541b74154a12063e2a
   m_configObjects: {}
