@@ -3893,6 +3893,7 @@ MonoBehaviour:
   uiAttempts: {fileID: 47484664}
   ball: {fileID: 0}
   ballStartPoint: {fileID: 0}
+  roundTimeoutSeconds: 2
 --- !u!4 &112104997
 Transform:
   m_ObjectHideFlags: 0
@@ -13613,8 +13614,6 @@ MonoBehaviour:
   moverBase: 1
   moveDistance: 1.5
   moveSpeed: 5
-  movementThreshold: 0.2
-  checkTime: 0.05
   externalMoveAllowed: 1
 --- !u!1001 &569197626
 PrefabInstance:
@@ -16567,7 +16566,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KeeperMoveFlagReader
   fileName: keeper_move.txt
   pollInterval: 0.25
-  defaultValueIfMissingOrEmpty: 1
+  defaultValue: 0
 --- !u!1001 &680837842
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20032,6 +20031,53 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 810922391}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &812974548
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 812974550}
+  - component: {fileID: 812974551}
+  m_Layer: 0
+  m_Name: GoalResultReader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &812974550
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 812974548}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1854.76, y: 1.98715, z: 1822.5378}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &812974551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 812974548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9111622433e0af4ab8989d149739071, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GoalResultFlagReaderTimestamp
+  fileName: goal_result.txt
+  pollInterval: 0.08
+  onlyDuringPlayableRound: 1
 --- !u!1001 &814636680
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23219,6 +23265,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bed1b81d0b76f24e9c406293297a89c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalTrigger
+  ballTag: Ball
+  logOnStayForDebug: 0
 --- !u!1001 &983610502
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32208,9 +32256,7 @@ MonoBehaviour:
   animator: {fileID: 1111291128}
   moverBase: 1
   moveDistance: 1
-  moveSpeed: 5
-  movementThreshold: 0.2
-  checkTime: 0.05
+  moveSpeed: 3
   externalMoveAllowed: 1
 --- !u!1001 &1452650041
 PrefabInstance:
@@ -32703,11 +32749,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: df358ea7e151cad40a86d1b1631d5916,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1476275486}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: df358ea7e151cad40a86d1b1631d5916, type: 3}
 --- !u!4 &1476275484 stripped
 Transform:
@@ -32715,34 +32757,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1476275483}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1476275485 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: df358ea7e151cad40a86d1b1631d5916,
-    type: 3}
-  m_PrefabInstance: {fileID: 1476275483}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1476275486
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1476275485}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4024fd6ec7db0274db6a474626e11949, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GoalkeeperAutoReact
-  portero: {fileID: 1232071307}
-  ball: {fileID: 391357479}
-  modeloHijo: {fileID: 0}
-  animator: {fileID: 0}
-  moverBase: 1
-  moveDistance: 1.5
-  moveSpeed: 2
-  movementThreshold: 0.2
-  checkTime: 0.05
-  externalMoveAllowed: 1
 --- !u!1 &1476385784
 GameObject:
   m_ObjectHideFlags: 0
@@ -45850,8 +45864,6 @@ MonoBehaviour:
   moverBase: 1
   moveDistance: 1.5
   moveSpeed: 1
-  movementThreshold: 0.2
-  checkTime: 0.05
   externalMoveAllowed: 1
 --- !u!1001 &2141376204
 PrefabInstance:
@@ -46038,3 +46050,4 @@ SceneRoots:
   - {fileID: 708931474}
   - {fileID: 615905275}
   - {fileID: 677465101}
+  - {fileID: 812974550}

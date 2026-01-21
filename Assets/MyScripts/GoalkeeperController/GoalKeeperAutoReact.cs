@@ -3,97 +3,54 @@ using UnityEngine;
 public class GoalkeeperAutoReact : MonoBehaviour
 {
     [Header("Referencias")]
-    public Transform portero;          // base (padre/root)
+    public Transform portero;           // base (padre/root)
     public Transform ball;
 
     [Header("Modelo animado (HIJO)")]
-    public Transform modeloHijo;       // este debe poder moverse libremente por animación
+    public Transform modeloHijo;        // el objeto que tiene el Animator
     public Animator animator;
 
     private static readonly int DiveDir = Animator.StringToHash("DiveDirection");
 
-    [Header("Movimiento lateral extra (opcional)")]
+    [Header("Movimiento base extra (opcional)")]
     public bool moverBase = true;
     public float moveDistance = 1.5f;
     public float moveSpeed = 5f;
 
-    [Header("Detección del tiro")]
-    public float movementThreshold = 0.25f;
-    public float checkTime = 0.05f;
+    // ===============================
+    // CONTROL POR TXT
+    // ===============================
+    [Header("TXT allow move (solo lectura)")]
+    [SerializeField] private bool externalMoveAllowed = false; // 🔥 por defecto NO se mueve
 
-    private Vector3 lastBallPos;
-    private float timer = 0f;
+    // ===============================
+    // ESTADO POR RONDA
+    // ===============================
+    private bool keeperReactedThisRound = false;
 
-    // Guardamos poses iniciales (para reset SOLO en nueva ronda)
+    // Poses iniciales (para reset)
     private Vector3 baseStartLocalPos;
     private Quaternion baseStartLocalRot;
 
     private Vector3 childStartLocalPos;
     private Quaternion childStartLocalRot;
 
-    // ====================================================
-    // ✅ SOLO 1 ANIMACIÓN POR RONDA
-    // ====================================================
-    private bool shotDetectedThisRound = false;
-    private bool keeperReactedThisRound = false;
-
-    // ====================================================
-    // 🔥 Valores para animaciones
-    // ====================================================
+    // Valores
     private const int DIR_IDLE = 0;
-    private const int DIR_LEFT = 1;
-    private const int DIR_RIGHT = 2;
-    private const int DIR_JUMP = 3;
-    private const int DIR_CELEBRATE = 4;     // jugador falla
-    private const int DIR_DISAPPOINTED = 5;  // jugador marca gol
 
-    // ====================================================
-    // 🔥🔥🔥 CONTROL EXTERNO POR TXT (0/1)
-    // ====================================================
-    [Header("Control externo (TXT)")]
-    public bool externalMoveAllowed = true;  // lo cambia KeeperMoveFlagReader
-
-    // ✅ AÑADIDO: candado central
-    private bool AllowMove()
+    // 🔥 AÑADIDO: fuerza a reaplicar el estado del TXT aunque no haya cambiado
+    public void RefreshExternalState()
     {
-        if (!externalMoveAllowed)
-        {
-            // Debug mínimo para no spamear, pero útil si algo intenta moverlo
-            // (si quieres más, puedes activar logs aquí)
-            return false;
-        }
-        return true;
+        ApplyExternalState();
     }
 
-    public void SetExternalMoveAllowed(bool allow)
+
+    void Awake()
     {
-        externalMoveAllowed = allow;
-        Debug.Log("[GK] externalMoveAllowed=" + externalMoveAllowed);
+        if (portero == null) portero = transform;
 
-        // ✅ SI EL TXT PASA A 0: paramos TODO movimiento/animación de dive y volvemos a Idle
-        if (!externalMoveAllowed)
-        {
-            StopAllCoroutines();
-
-            if (animator != null)
-            {
-                animator.applyRootMotion = true;
-                animator.SetInteger(DiveDir, DIR_IDLE);
-                animator.Update(0f);
-            }
-        }
-    }
-
-    void Start()
-    {
-        if (portero == null)
-            portero = transform;
-
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
-
-        if (modeloHijo == null && animator != null)
-            modeloHijo = animator.transform;
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (modeloHijo == null && animator != null) modeloHijo = animator.transform;
 
         baseStartLocalPos = portero.localPosition;
         baseStartLocalRot = portero.localRotation;
@@ -104,124 +61,30 @@ public class GoalkeeperAutoReact : MonoBehaviour
             childStartLocalRot = modeloHijo.localRotation;
         }
 
+        // 🔥 CLAVE: el Animator empieza APAGADO para que jamás se “cuele” una animación
         if (animator != null)
         {
-            animator.applyRootMotion = true;
-            animator.SetInteger(DiveDir, DIR_IDLE);
-            animator.Update(0f);
+            animator.applyRootMotion = false;
+            animator.enabled = false;
         }
-
-        lastBallPos = ball != null ? ball.position : Vector3.zero;
     }
 
-    void Update()
+    // =====================================================
+    // 🔒 APLICAR ESTADO SEGÚN TXT
+    // =====================================================
+    public void SetExternalMoveAllowed(bool allow)
     {
-        if (ball == null) return;
+        externalMoveAllowed = allow;
+        Debug.Log("[GK] externalMoveAllowed=" + externalMoveAllowed);
 
-        // ✅ CANDADO: si TXT=0, jamás reaccionar por movimiento de pelota
-        if (!AllowMove()) return;
-
-        // ✅ si ya reaccionó esta ronda, no hacemos nada más
-        if (keeperReactedThisRound) return;
-
-        timer += Time.deltaTime;
-
-        if (timer >= checkTime)
-        {
-            float distance = Vector3.Distance(ball.position, lastBallPos);
-
-            if (distance > movementThreshold)
-            {
-                float deltaX = ball.position.x - lastBallPos.x;
-
-                // ✅ Detectar chute una sola vez por ronda
-                if (deltaX > 0f && !shotDetectedThisRound)
-                {
-                    shotDetectedThisRound = true;
-
-                    if (GameManager.I != null)
-                        GameManager.I.ArmShotWindow();
-
-                    TriggerKeeperReactionOnce();
-                }
-            }
-
-            lastBallPos = ball.position;
-            timer = 0f;
-        }
+        ApplyExternalState();
     }
 
-    private void TriggerKeeperReactionOnce()
-    {
-        // ✅ CANDADO extra por seguridad
-        if (!AllowMove()) return;
-
-        if (keeperReactedThisRound) return;
-        keeperReactedThisRound = true;
-
-        ElegirMovimiento();
-    }
-
-    private void ElegirMovimiento()
-    {
-        // ✅ CANDADO extra por seguridad
-        if (!AllowMove()) return;
-
-        // ✅ 1,2,3 (3 incluido)
-        int diveValue = Random.Range(1, 4);
-
-        if (animator != null)
-        {
-            animator.applyRootMotion = true;
-            animator.SetInteger(DiveDir, diveValue);
-            animator.Update(0f);
-            Debug.Log("[GK] DiveDirection=" + diveValue);
-        }
-
-        // ✅ Movimiento extra solo para 1 y 2 (izquierda/derecha)
-        if (moverBase && (diveValue == DIR_LEFT || diveValue == DIR_RIGHT))
-        {
-            StopAllCoroutines();
-            StartCoroutine(MoverBaseExtra(diveValue));
-        }
-    }
-
-    private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
-    {
-        // ✅ CANDADO extra por seguridad
-        if (!AllowMove()) yield break;
-
-        Vector3 destino = baseStartLocalPos;
-
-        if (diveValue == DIR_LEFT)
-            destino += Vector3.back * moveDistance;
-        else if (diveValue == DIR_RIGHT)
-            destino += Vector3.forward * moveDistance;
-
-        Vector3 inicio = portero.localPosition;
-
-        float t = 0f;
-        while (t < 1f)
-        {
-            // ✅ si en mitad del movimiento el TXT pasa a 0, cortamos
-            if (!AllowMove()) yield break;
-
-            t += Time.deltaTime * moveSpeed;
-            portero.localPosition = Vector3.Lerp(inicio, destino, t);
-            yield return null;
-        }
-
-        portero.localPosition = destino;
-    }
-
-    // ✅ Reset SOLO cuando empieza nueva ronda
-    public void ResetForNewRound()
+    private void ApplyExternalState()
     {
         StopAllCoroutines();
 
-        shotDetectedThisRound = false;
-        keeperReactedThisRound = false;
-
+        // Siempre reseteamos la pose base y el hijo
         portero.localPosition = baseStartLocalPos;
         portero.localRotation = baseStartLocalRot;
 
@@ -231,96 +94,142 @@ public class GoalkeeperAutoReact : MonoBehaviour
             modeloHijo.localRotation = childStartLocalRot;
         }
 
-        if (animator != null)
+        if (animator == null) return;
+
+        // 🔥 Forzamos el parámetro a Idle SIEMPRE antes de decidir
+        // (aunque esté disabled, dejamos el parámetro “limpio”)
+        animator.enabled = true;                 // lo encendemos 1 frame para poder setear seguro
+        animator.applyRootMotion = false;
+        animator.Rebind();
+        animator.Update(0f);
+        animator.SetInteger(DiveDir, DIR_IDLE);
+        animator.Update(0f);
+
+        if (!externalMoveAllowed)
         {
-            animator.applyRootMotion = true;
-            animator.Rebind();
-            animator.Update(0f);
-            animator.SetInteger(DiveDir, DIR_IDLE);
-            animator.Update(0f);
+            // TXT=0 -> NO ANIMACIÓN, NO ROOT, Animator OFF
+            animator.applyRootMotion = false;
+            animator.enabled = false;
+
+            Debug.Log("[GK] TXT=0 -> Animator OFF, portero QUIETO");
         }
+        else
+        {
+            // TXT=1 -> permitir animación (root motion activo)
+            animator.applyRootMotion = true;
+            animator.enabled = true;
 
-        lastBallPos = ball != null ? ball.position : Vector3.zero;
-
-        Debug.Log("[GK] ResetForNewRound OK → listo para 1 animación en esta ronda");
+            Debug.Log("[GK] TXT=1 -> Animator ON, puede moverse");
+        }
     }
 
-    // Para activación externa (cámara/LiDAR)
-    public void OnShotDetected(float dummySpeed)
+    // =====================================================
+    // 🎯 LLAMADO AL INICIO DE CADA RONDA
+    // =====================================================
+    public void TriggerPerRoundAction()
     {
-        // ✅ TXT manda: si 0, no se mueve
-        if (!AllowMove()) return;
+        // Si TXT=0 -> ni siquiera intentamos nada
+        if (!externalMoveAllowed)
+        {
+            Debug.Log("[GK] TriggerPerRoundAction: TXT=0 -> NO hace nada");
+            keeperReactedThisRound = true; // “consume” la acción de ronda
+            return;
+        }
 
         if (keeperReactedThisRound) return;
-
-        shotDetectedThisRound = true;
-
-        if (GameManager.I != null)
-            GameManager.I.ArmShotWindow();
-
-        TriggerKeeperReactionOnce();
-    }
-
-    // ====================================================
-    // ✅ AL INICIO DE CADA RONDA, 1 ANIMACIÓN RANDOM + TIMEOUT
-    // ====================================================
-    public void TriggerRandomDiveThisRound_NoShotWindow()
-    {
-        // ✅ TXT manda: si 0, no se mueve
-        if (!AllowMove())
-        {
-            Debug.Log("[GK] TriggerRandomDiveThisRound_NoShotWindow IGNORADO (TXT=0)");
-            return;
-        }
-
-        if (keeperReactedThisRound)
-        {
-            Debug.Log("[GK] TriggerRandomDiveThisRound_NoShotWindow IGNORADO (ya reaccionó esta ronda)");
-            return;
-        }
-
         keeperReactedThisRound = true;
 
-        // ✅ arrancar timeout de fallo (si quieres)
-        if (GameManager.I != null)
-            GameManager.I.ArmShotWindow();
-
-        ElegirMovimiento();
-        Debug.Log("[GK] TriggerRandomDiveThisRound_NoShotWindow OK");
+        DoRandomDive();
     }
 
-    // ====================================================
-    // 🔥 ANIMACIONES POR RESULTADO (NO dependen del TXT)
-    // ====================================================
+    private void DoRandomDive()
+    {
+        if (animator == null) return;
+
+        // 1..3 incluidos
+        int diveValue = Random.Range(1, 4);
+
+        animator.enabled = true;
+        animator.applyRootMotion = true;
+
+        animator.SetInteger(DiveDir, diveValue);
+        animator.Update(0f);
+
+        Debug.Log("[GK] DiveDirection=" + diveValue);
+
+        // movimiento extra en base para 1 y 2
+        if (moverBase && (diveValue == 1 || diveValue == 2))
+        {
+            StopAllCoroutines();
+            StartCoroutine(MoverBaseExtra(diveValue));
+        }
+    }
+
+    private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
+    {
+        Vector3 destino = baseStartLocalPos;
+
+        // OJO: tus ejes originales:
+        if (diveValue == 1) destino += Vector3.back * moveDistance;
+        else if (diveValue == 2) destino += Vector3.forward * moveDistance;
+
+        Vector3 inicio = portero.localPosition;
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * moveSpeed;
+            portero.localPosition = Vector3.Lerp(inicio, destino, t);
+            yield return null;
+        }
+
+        portero.localPosition = destino;
+    }
+
+    // =====================================================
+    // 🔄 Reset SOLO cuando empieza nueva ronda
+    // =====================================================
+    public void ResetForNewRound()
+    {
+        StopAllCoroutines();
+        keeperReactedThisRound = false;
+
+        // reset poses
+        portero.localPosition = baseStartLocalPos;
+        portero.localRotation = baseStartLocalRot;
+
+        if (modeloHijo != null)
+        {
+            modeloHijo.localPosition = childStartLocalPos;
+            modeloHijo.localRotation = childStartLocalRot;
+        }
+
+        // reaplicar TXT state (para que si está en 0 se quede apagado)
+        ApplyExternalState();
+
+        Debug.Log("[GK] ResetForNewRound OK");
+    }
+
+    // =====================================================
+    // 🎉 RESULTADOS (si quieres que SIEMPRE pueda animar aquí)
+    // =====================================================
     public void PlayCelebrate()
     {
         if (animator == null) return;
 
-        keeperReactedThisRound = true;
-        shotDetectedThisRound = true;
-
-        StopAllCoroutines();
-
+        animator.enabled = true;
         animator.applyRootMotion = true;
-        animator.SetInteger(DiveDir, DIR_CELEBRATE);
+        animator.SetInteger(DiveDir, 4);
         animator.Update(0f);
-
-        Debug.Log("[GK] Celebrate (DiveDirection=4)");
     }
 
     public void PlayDisappointed()
     {
         if (animator == null) return;
 
-        keeperReactedThisRound = true;
-        shotDetectedThisRound = true;
-
-        StopAllCoroutines();
-
+        animator.enabled = true;
         animator.applyRootMotion = true;
-        animator.SetInteger(DiveDir, DIR_DISAPPOINTED);
+        animator.SetInteger(DiveDir, 5);
         animator.Update(0f);
-
-        Debug.Log("[GK] Disappointed (DiveDirection=5)");
     }
 }

@@ -1,54 +1,47 @@
 using System.IO;
 using UnityEngine;
 
-public class KeeperMoveFlagReader : MonoBehaviour
+public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
 {
-    [Header("Nombre del archivo (en carpeta ../Config)")]
+    [Header("Archivo en ../Config")]
     public string fileName = "keeper_move.txt";
 
-    [Header("Frecuencia de lectura (segundos)")]
-    public float pollInterval = 0.25f;
+    [Header("Lectura cada X segundos")]
+    public float pollInterval = 0.15f;
 
-    [Header("Valor por defecto si falta/está vacío")]
-    public int defaultValueIfMissingOrEmpty = 1; // 1 = se mueve, 0 = no se mueve
+    [Header("Por defecto si falta/está vacío")]
+    public int defaultValue = 0;
 
-    private string filePath;
-    private GoalkeeperAutoReact keeper;
-    private int lastValue = -999;
+    public bool CurrentAllowMove { get; private set; } = false;
+
+    string filePath;
+    GoalkeeperAutoReact keeper;
+
+    long lastTimestamp = -1;
 
     void Awake()
     {
         filePath = Path.Combine(Application.dataPath, "../Config", fileName);
-        keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        Debug.Log("[KEEPER TS] Ruta archivo = " + filePath);
 
-        Debug.Log("[KEEPER FLAG] Ruta archivo = " + filePath);
+        keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        EnsureFileExists();
+
+        // primera lectura
+        ForceReadNow();
     }
 
     void OnEnable()
     {
-        Debug.Log("[KEEPER FLAG] OnEnable() -> empieza a leer");
-        lastValue = -999;
-
-        EnsureFileExistsAndHasValue();
-
-        ReadFlag();
-        InvokeRepeating(nameof(ReadFlag), pollInterval, pollInterval);
+        InvokeRepeating(nameof(ForceReadNow), pollInterval, pollInterval);
     }
 
     void OnDisable()
     {
-        Debug.Log("[KEEPER FLAG] OnDisable() -> deja de leer");
-        CancelInvoke(nameof(ReadFlag));
+        CancelInvoke(nameof(ForceReadNow));
     }
 
-    // ✅ Para llamarlo justo al pulsar START (si quieres forzar lectura)
-    public void ForceReadNow()
-    {
-        EnsureFileExistsAndHasValue();
-        ReadFlag();
-    }
-
-    void EnsureFileExistsAndHasValue()
+    void EnsureFileExists()
     {
         try
         {
@@ -58,36 +51,26 @@ public class KeeperMoveFlagReader : MonoBehaviour
 
             if (!File.Exists(filePath))
             {
-                File.WriteAllText(filePath, defaultValueIfMissingOrEmpty.ToString());
-                Debug.LogWarning("[KEEPER FLAG] No existía -> creado con valor " + defaultValueIfMissingOrEmpty);
-                return;
-            }
-
-            string raw = File.ReadAllText(filePath);
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                File.WriteAllText(filePath, defaultValueIfMissingOrEmpty.ToString());
-                Debug.LogWarning("[KEEPER FLAG] Archivo vacío -> rellenado con valor " + defaultValueIfMissingOrEmpty);
+                // escribimos con timestamp actual
+                long ts = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                File.WriteAllText(filePath, $"{defaultValue},{ts}");
+                Debug.LogWarning("[KEEPER TS] No existía -> creado: " + defaultValue + "," + ts);
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("[KEEPER FLAG] Error asegurando archivo: " + e.Message);
+            Debug.LogWarning("[KEEPER TS] Error creando/asegurando archivo: " + e.Message);
         }
     }
 
-    void ReadFlag()
+    public void ForceReadNow()
     {
         if (keeper == null)
-        {
             keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
-            if (keeper == null) return;
-        }
 
         if (!File.Exists(filePath))
         {
-            Debug.LogWarning("[KEEPER FLAG] No existe archivo -> aplico default " + defaultValueIfMissingOrEmpty);
-            ApplyValue(defaultValueIfMissingOrEmpty, "missing");
+            Apply(defaultValue, lastTimestamp, "missing");
             return;
         }
 
@@ -98,37 +81,52 @@ public class KeeperMoveFlagReader : MonoBehaviour
             string txt = raw.Trim();
 
             if (string.IsNullOrWhiteSpace(txt))
+                return;
+
+            // Formato: value,timestamp
+            // Aceptamos separador coma o punto y coma
+            string[] parts = txt.Split(',', ';');
+
+            if (parts.Length < 2)
             {
-                Debug.LogWarning("[KEEPER FLAG] Contenido vacío -> aplico default " + defaultValueIfMissingOrEmpty);
-                ApplyValue(defaultValueIfMissingOrEmpty, "empty");
+                Debug.LogWarning("[KEEPER TS] Formato inválido (esperado value,ts): '" + txt + "'");
                 return;
             }
 
-            int value;
-            if (!int.TryParse(txt, out value))
+            int v;
+            if (!int.TryParse(parts[0].Trim(), out v))
+                v = 0;
+
+            v = (v != 0) ? 1 : 0;
+
+            long ts;
+            if (!long.TryParse(parts[1].Trim(), out ts))
             {
-                Debug.LogWarning("[KEEPER FLAG] No pude parsear: '" + txt + "' (raw='" + raw + "') -> lo tomo como 0");
-                value = 0;
+                Debug.LogWarning("[KEEPER TS] Timestamp inválido: '" + parts[1] + "'");
+                return;
             }
 
-            value = (value != 0) ? 1 : 0; // normalizar a 0/1
+            // ✅ Solo aplicamos si el timestamp cambió
+            if (ts == lastTimestamp)
+                return;
 
-            ApplyValue(value, "read raw='" + raw + "'");
+            lastTimestamp = ts;
+
+            Apply(v, ts, "read raw='" + raw + "'");
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("[KEEPER FLAG] Error leyendo archivo (raw='" + raw + "'): " + e.Message);
+            Debug.LogWarning("[KEEPER TS] Error leyendo (raw='" + raw + "'): " + e.Message);
         }
     }
 
-    void ApplyValue(int value, string info)
+    void Apply(int v, long ts, string info)
     {
-        if (value != lastValue)
-        {
-            lastValue = value;
-            bool allow = (value == 1);
-            keeper.SetExternalMoveAllowed(allow);
-            Debug.Log("[KEEPER FLAG] " + value + " -> allowMove=" + allow + " | " + info);
-        }
+        CurrentAllowMove = (v == 1);
+
+        if (keeper != null)
+            keeper.SetExternalMoveAllowed(CurrentAllowMove);
+
+        Debug.Log($"[KEEPER TS] v={v} allowMove={CurrentAllowMove} ts={ts} | {info}");
     }
 }
