@@ -3,132 +3,181 @@ using UnityEngine;
 
 public class KeeperMoveFlagReader : MonoBehaviour
 {
-    [Header("Nombre del archivo (en carpeta ../Config)")]
-    public string fileName = "keeper_move.txt";
+    [Header("Nombre del archivo (en carpeta Config)")]
+    public string fileName = "presencia.txt";
 
     [Header("Frecuencia de lectura (segundos)")]
-    public float pollInterval = 0.25f;
+    public float pollInterval = 0.1f;
 
-    [Header("Valor por defecto si falta/está vacío")]
-    public int defaultValueIfMissingOrEmpty = 1; // 1 = se mueve, 0 = no se mueve
+    [Header("Ruta: Config al lado de Assets (recomendado)")]
+    public bool useProjectConfigFolder = true;
 
     private string filePath;
     private GoalkeeperAutoReact keeper;
+
     private int lastValue = -999;
+    private bool firedWhile1 = false;
+    private int readCount = 0;
 
     void Awake()
     {
-        filePath = Path.Combine(Application.dataPath, "../Config", fileName);
+        Debug.Log("[KEEPER FLAG] ==================== AWAKE ====================");
+        
         keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
 
-        Debug.Log("[KEEPER FLAG] Ruta archivo = " + filePath);
+        if (keeper == null)
+        {
+            Debug.LogError("[KEEPER FLAG] ❌❌❌ NO ENCONTRÉ GoalkeeperAutoReact!");
+        }
+        else
+        {
+            Debug.Log("[KEEPER FLAG] ✅ GoalkeeperAutoReact encontrado: " + keeper.gameObject.name);
+        }
+
+        if (useProjectConfigFolder)
+        {
+            filePath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Config", fileName));
+        }
+        else
+        {
+            filePath = Path.Combine(Application.persistentDataPath, fileName);
+        }
+
+        Debug.Log("[KEEPER FLAG] 📁 RUTA COMPLETA DEL ARCHIVO:");
+        Debug.Log("[KEEPER FLAG]    " + filePath);
+        Debug.Log("[KEEPER FLAG] 📁 ¿Existe? " + File.Exists(filePath));
     }
 
     void OnEnable()
     {
-        Debug.Log("[KEEPER FLAG] OnEnable() -> empieza a leer");
-        lastValue = -999;
-
-        EnsureFileExistsAndHasValue();
-
-        ReadFlag();
-        InvokeRepeating(nameof(ReadFlag), pollInterval, pollInterval);
+        Debug.Log("[KEEPER FLAG] ==================== OnEnable ====================");
+        EnsureFileExists("0");
+        
+        // Cancelar cualquier invoke anterior
+        CancelInvoke(nameof(ReadFlag));
+        
+        // Iniciar nuevo invoke
+        InvokeRepeating(nameof(ReadFlag), 0f, pollInterval);
+        
+        Debug.Log("[KEEPER FLAG] ✅ InvokeRepeating ACTIVADO cada " + pollInterval + " seg");
     }
 
     void OnDisable()
     {
-        Debug.Log("[KEEPER FLAG] OnDisable() -> deja de leer");
+        Debug.Log("[KEEPER FLAG] ==================== OnDisable ====================");
         CancelInvoke(nameof(ReadFlag));
     }
 
-    // ✅ Para llamarlo justo al pulsar START (si quieres forzar lectura)
-    public void ForceReadNow()
-    {
-        EnsureFileExistsAndHasValue();
-        ReadFlag();
-    }
-
-    void EnsureFileExistsAndHasValue()
+    void EnsureFileExists(string defaultValue)
     {
         try
         {
             string dir = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(dir))
+            {
                 Directory.CreateDirectory(dir);
+                Debug.Log("[KEEPER FLAG] 📁 Directorio creado: " + dir);
+            }
 
             if (!File.Exists(filePath))
             {
-                File.WriteAllText(filePath, defaultValueIfMissingOrEmpty.ToString());
-                Debug.LogWarning("[KEEPER FLAG] No existía -> creado con valor " + defaultValueIfMissingOrEmpty);
-                return;
+                File.WriteAllText(filePath, defaultValue);
+                Debug.LogWarning("[KEEPER FLAG] ⚠️ Archivo creado con: '" + defaultValue + "'");
             }
-
-            string raw = File.ReadAllText(filePath);
-            if (string.IsNullOrWhiteSpace(raw))
+            else
             {
-                File.WriteAllText(filePath, defaultValueIfMissingOrEmpty.ToString());
-                Debug.LogWarning("[KEEPER FLAG] Archivo vacío -> rellenado con valor " + defaultValueIfMissingOrEmpty);
+                string currentContent = File.ReadAllText(filePath);
+                Debug.Log("[KEEPER FLAG] ✅ Archivo existe. Contenido actual: '" + currentContent + "'");
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("[KEEPER FLAG] Error asegurando archivo: " + e.Message);
+            Debug.LogError("[KEEPER FLAG] ❌ Error con archivo: " + e.Message);
         }
     }
 
     void ReadFlag()
     {
+        readCount++;
+        
+        // Debug CADA lectura (no solo cada 100)
+        Debug.Log($"[KEEPER FLAG] 🔄 LECTURA #{readCount} - Frame {Time.frameCount}");
+
         if (keeper == null)
         {
             keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
-            if (keeper == null) return;
-        }
-
-        if (!File.Exists(filePath))
-        {
-            Debug.LogWarning("[KEEPER FLAG] No existe archivo -> aplico default " + defaultValueIfMissingOrEmpty);
-            ApplyValue(defaultValueIfMissingOrEmpty, "missing");
-            return;
-        }
-
-        string raw = "";
-        try
-        {
-            raw = File.ReadAllText(filePath);
-            string txt = raw.Trim();
-
-            if (string.IsNullOrWhiteSpace(txt))
+            if (keeper == null)
             {
-                Debug.LogWarning("[KEEPER FLAG] Contenido vacío -> aplico default " + defaultValueIfMissingOrEmpty);
-                ApplyValue(defaultValueIfMissingOrEmpty, "empty");
+                Debug.LogError("[KEEPER FLAG] ❌ NO encuentro GoalkeeperAutoReact!");
                 return;
             }
+        }
 
-            int value;
-            if (!int.TryParse(txt, out value))
-            {
-                Debug.LogWarning("[KEEPER FLAG] No pude parsear: '" + txt + "' (raw='" + raw + "') -> lo tomo como 0");
-                value = 0;
-            }
-
-            value = (value != 0) ? 1 : 0; // normalizar a 0/1
-
-            ApplyValue(value, "read raw='" + raw + "'");
+        string raw;
+        try
+        {
+            raw = File.ReadAllText(filePath).Trim();
+            Debug.Log($"[KEEPER FLAG]    Contenido leído: '{raw}'");
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning("[KEEPER FLAG] Error leyendo archivo (raw='" + raw + "'): " + e.Message);
+            Debug.LogError("[KEEPER FLAG] ❌ Error leyendo: " + e.Message);
+            return;
+        }
+
+        int value = (raw.Length > 0 && raw[0] == '1') ? 1 : 0;
+        Debug.Log($"[KEEPER FLAG]    Valor interpretado: {value}");
+
+        // SIEMPRE log el cambio
+        if (value != lastValue)
+        {
+            Debug.Log($"[KEEPER FLAG] 🔔🔔🔔 CAMBIO DETECTADO: {lastValue} -> {value}");
+            lastValue = value;
+        }
+
+        // Aplicar bloqueo/permiso
+        keeper.SetExternalMoveAllowed(value == 1);
+
+        // Disparar cuando sea 1
+        if (value == 1 && !firedWhile1)
+        {
+            firedWhile1 = true;
+            Debug.Log("[KEEPER FLAG] 🚀🚀🚀 DISPARO ANIMACIÓN 🚀🚀🚀");
+            keeper.TriggerRandomDiveThisRound_NoShotWindow();
+        }
+        else if (value == 0)
+        {
+            if (firedWhile1)
+            {
+                Debug.Log("[KEEPER FLAG] 🔄 REARM - Listo para próximo 1");
+            }
+            firedWhile1 = false;
+            keeper.RearmFromExternalTrigger();
         }
     }
 
-    void ApplyValue(int value, string info)
+    // Para probar manualmente desde Inspector
+    [ContextMenu("Leer Archivo AHORA")]
+    public void ForceReadNow()
     {
-        if (value != lastValue)
+        Debug.Log("[KEEPER FLAG] ========== LECTURA FORZADA MANUAL ==========");
+        ReadFlag();
+    }
+
+    [ContextMenu("Mostrar Info")]
+    public void ShowInfo()
+    {
+        Debug.Log("[KEEPER FLAG] ========== INFO ==========");
+        Debug.Log("[KEEPER FLAG] Ruta: " + filePath);
+        Debug.Log("[KEEPER FLAG] Existe: " + File.Exists(filePath));
+        Debug.Log("[KEEPER FLAG] Lecturas realizadas: " + readCount);
+        Debug.Log("[KEEPER FLAG] Último valor: " + lastValue);
+        Debug.Log("[KEEPER FLAG] firedWhile1: " + firedWhile1);
+        Debug.Log("[KEEPER FLAG] InvokeRepeating activo: " + IsInvoking(nameof(ReadFlag)));
+        
+        if (File.Exists(filePath))
         {
-            lastValue = value;
-            bool allow = (value == 1);
-            keeper.SetExternalMoveAllowed(allow);
-            Debug.Log("[KEEPER FLAG] " + value + " -> allowMove=" + allow + " | " + info);
+            Debug.Log("[KEEPER FLAG] Contenido actual: '" + File.ReadAllText(filePath) + "'");
         }
     }
 }

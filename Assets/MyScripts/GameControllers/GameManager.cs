@@ -247,11 +247,11 @@ public class GameManager : MonoBehaviour
         // 🔥🔥🔥 AÑADIDO: EN CADA NUEVA RONDA, PORTERO HACE 1 ANIMACIÓN
         // si el TXT está en 1 (externalMoveAllowed=true)
         // =========================================================
-        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+       /* var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeper != null)
         {
             keeper.TriggerRandomDiveThisRound_NoShotWindow();
-        }
+        }*/
     }
 
     void ResetPositions()
