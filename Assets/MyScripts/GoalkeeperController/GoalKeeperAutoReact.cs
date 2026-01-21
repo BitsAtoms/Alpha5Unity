@@ -3,64 +3,52 @@ using UnityEngine;
 public class GoalkeeperAutoReact : MonoBehaviour
 {
     [Header("Referencias")]
-    public Transform portero;
+    public Transform portero;           // base (padre/root)
     public Transform ball;
 
     [Header("Modelo animado (HIJO)")]
-    public Transform modeloHijo;
+    public Transform modeloHijo;        // el objeto que tiene el Animator
     public Animator animator;
 
     private static readonly int DiveDir = Animator.StringToHash("DiveDirection");
 
-    [Header("Movimiento lateral extra (opcional)")]
+    [Header("Movimiento base extra (opcional)")]
     public bool moverBase = true;
     public float moveDistance = 1.5f;
     public float moveSpeed = 5f;
 
-    // ✅ Importante: NO reacciona a la pelota
-    [Header("Reacción por pelota (NO USAR)")]
-    public bool reactToBallMovement = false;
+    // ===============================
+    // CONTROL POR TXT
+    // ===============================
+    [Header("TXT allow move (solo lectura)")]
+    [SerializeField] private bool externalMoveAllowed = false; // 🔥 por defecto NO se mueve
 
+    // ===============================
+    // ESTADO POR RONDA
+    // ===============================
+    private bool keeperReactedThisRound = false;
+
+    // Poses iniciales (para reset)
     private Vector3 baseStartLocalPos;
     private Quaternion baseStartLocalRot;
 
     private Vector3 childStartLocalPos;
     private Quaternion childStartLocalRot;
 
-    private bool keeperReactedThisRound = false;
-
+    // Valores
     private const int DIR_IDLE = 0;
-    private const int DIR_LEFT = 1;
-    private const int DIR_RIGHT = 2;
-    private const int DIR_JUMP = 3;
-    private const int DIR_CELEBRATE = 4;
-    private const int DIR_DISAPPOINTED = 5;
 
-    [Header("Control externo (TXT)")]
-    public bool externalMoveAllowed = true;
-
-    private bool AllowMove() => externalMoveAllowed;
-
-    public void SetExternalMoveAllowed(bool allow)
+    // 🔥 AÑADIDO: fuerza a reaplicar el estado del TXT aunque no haya cambiado
+    public void RefreshExternalState()
     {
-        externalMoveAllowed = allow;
-        Debug.Log("[GK] externalMoveAllowed=" + externalMoveAllowed);
-
-        if (!externalMoveAllowed)
-        {
-            StopAllCoroutines();
-            if (animator != null)
-            {
-                animator.applyRootMotion = true;
-                animator.SetInteger(DiveDir, DIR_IDLE);
-                animator.Update(0f);
-            }
-        }
+        ApplyExternalState();
     }
 
-    void Start()
+
+    void Awake()
     {
         if (portero == null) portero = transform;
+
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (modeloHijo == null && animator != null) modeloHijo = animator.transform;
 
@@ -73,82 +61,30 @@ public class GoalkeeperAutoReact : MonoBehaviour
             childStartLocalRot = modeloHijo.localRotation;
         }
 
+        // 🔥 CLAVE: el Animator empieza APAGADO para que jamás se “cuele” una animación
         if (animator != null)
         {
-            animator.applyRootMotion = true;
-            animator.SetInteger(DiveDir, DIR_IDLE);
-            animator.Update(0f);
+            animator.applyRootMotion = false;
+            animator.enabled = false;
         }
-
-        Debug.Log("[GK] Start OK. Pulsa P para probar animación manual.");
     }
 
-    void Update()
+    // =====================================================
+    // 🔒 APLICAR ESTADO SEGÚN TXT
+    // =====================================================
+    public void SetExternalMoveAllowed(bool allow)
     {
-        // ✅ TEST: si con P se mueve, el GK+Animator están bien
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            Debug.Log("[GK] TEST P -> TriggerRandomDiveThisRound_NoShotWindow()");
-            TriggerRandomDiveThisRound_NoShotWindow();
-        }
+        externalMoveAllowed = allow;
+        Debug.Log("[GK] externalMoveAllowed=" + externalMoveAllowed);
 
-        // ✅ No usamos la pelota para disparar nada
-        if (!reactToBallMovement) return;
+        ApplyExternalState();
     }
 
-    private void ElegirMovimiento()
-    {
-        if (!AllowMove())
-        {
-            Debug.Log("[GK] ElegirMovimiento BLOQUEADO (TXT=0)");
-            return;
-        }
-
-        int diveValue = Random.Range(1, 4);
-
-        if (animator != null)
-        {
-            animator.applyRootMotion = true;
-            animator.SetInteger(DiveDir, diveValue);
-            animator.Update(0f);
-            Debug.Log("[GK] DiveDirection=" + diveValue);
-        }
-
-        if (moverBase && (diveValue == DIR_LEFT || diveValue == DIR_RIGHT))
-        {
-            StopAllCoroutines();
-            StartCoroutine(MoverBaseExtra(diveValue));
-        }
-    }
-
-    private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
-    {
-        if (!AllowMove()) yield break;
-
-        Vector3 destino = baseStartLocalPos;
-
-        if (diveValue == DIR_LEFT) destino += Vector3.back * moveDistance;
-        else if (diveValue == DIR_RIGHT) destino += Vector3.forward * moveDistance;
-
-        Vector3 inicio = portero.localPosition;
-
-        float t = 0f;
-        while (t < 1f)
-        {
-            if (!AllowMove()) yield break;
-            t += Time.deltaTime * moveSpeed;
-            portero.localPosition = Vector3.Lerp(inicio, destino, t);
-            yield return null;
-        }
-
-        portero.localPosition = destino;
-    }
-
-    public void ResetForNewRound()
+    private void ApplyExternalState()
     {
         StopAllCoroutines();
-        keeperReactedThisRound = false;
 
+        // Siempre reseteamos la pose base y el hijo
         portero.localPosition = baseStartLocalPos;
         portero.localRotation = baseStartLocalRot;
 
@@ -158,65 +94,143 @@ public class GoalkeeperAutoReact : MonoBehaviour
             modeloHijo.localRotation = childStartLocalRot;
         }
 
-        if (animator != null)
+        if (animator == null) return;
+
+        // 🔥 Forzamos el parámetro a Idle SIEMPRE antes de decidir
+        // (aunque esté disabled, dejamos el parámetro “limpio”)
+        animator.enabled = true;                 // lo encendemos 1 frame para poder setear seguro
+        animator.applyRootMotion = false;
+        animator.Rebind();
+        animator.Update(0f);
+        animator.SetInteger(DiveDir, DIR_IDLE);
+        animator.Update(0f);
+
+        if (!externalMoveAllowed)
         {
-            animator.applyRootMotion = true;
-            animator.Rebind();
-            animator.Update(0f);
-            animator.SetInteger(DiveDir, DIR_IDLE);
-            animator.Update(0f);
+            // TXT=0 -> NO ANIMACIÓN, NO ROOT, Animator OFF
+            animator.applyRootMotion = false;
+            animator.enabled = false;
+
+            Debug.Log("[GK] TXT=0 -> Animator OFF, portero QUIETO");
         }
+        else
+        {
+            // TXT=1 -> permitir animación (root motion activo)
+            animator.applyRootMotion = true;
+            animator.enabled = true;
+
+            Debug.Log("[GK] TXT=1 -> Animator ON, puede moverse");
+        }
+    }
+
+    // =====================================================
+    // 🎯 LLAMADO AL INICIO DE CADA RONDA
+    // =====================================================
+    public void TriggerPerRoundAction()
+    {
+        // Si TXT=0 -> ni siquiera intentamos nada
+        if (!externalMoveAllowed)
+        {
+            Debug.Log("[GK] TriggerPerRoundAction: TXT=0 -> NO hace nada");
+            keeperReactedThisRound = true; // “consume” la acción de ronda
+            return;
+        }
+
+        if (keeperReactedThisRound) return;
+        keeperReactedThisRound = true;
+
+        DoRandomDive();
+    }
+
+    private void DoRandomDive()
+    {
+        if (animator == null) return;
+
+        // 1..3 incluidos
+        int diveValue = Random.Range(1, 4);
+
+        animator.enabled = true;
+        animator.applyRootMotion = true;
+
+        animator.SetInteger(DiveDir, diveValue);
+        animator.Update(0f);
+
+        Debug.Log("[GK] DiveDirection=" + diveValue);
+
+        // movimiento extra en base para 1 y 2
+        if (moverBase && (diveValue == 1 || diveValue == 2))
+        {
+            StopAllCoroutines();
+            StartCoroutine(MoverBaseExtra(diveValue));
+        }
+    }
+
+    private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
+    {
+        Vector3 destino = baseStartLocalPos;
+
+        // OJO: tus ejes originales:
+        if (diveValue == 1) destino += Vector3.back * moveDistance;
+        else if (diveValue == 2) destino += Vector3.forward * moveDistance;
+
+        Vector3 inicio = portero.localPosition;
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * moveSpeed;
+            portero.localPosition = Vector3.Lerp(inicio, destino, t);
+            yield return null;
+        }
+
+        portero.localPosition = destino;
+    }
+
+    // =====================================================
+    // 🔄 Reset SOLO cuando empieza nueva ronda
+    // =====================================================
+    public void ResetForNewRound()
+    {
+        StopAllCoroutines();
+        keeperReactedThisRound = false;
+
+        // reset poses
+        portero.localPosition = baseStartLocalPos;
+        portero.localRotation = baseStartLocalRot;
+
+        if (modeloHijo != null)
+        {
+            modeloHijo.localPosition = childStartLocalPos;
+            modeloHijo.localRotation = childStartLocalRot;
+        }
+
+        // reaplicar TXT state (para que si está en 0 se quede apagado)
+        ApplyExternalState();
 
         Debug.Log("[GK] ResetForNewRound OK");
     }
 
-    // ✅ Este es el que vamos a llamar desde el TXT
-    public void TriggerRandomDiveThisRound_NoShotWindow()
-    {
-        if (!AllowMove())
-        {
-            Debug.Log("[GK] TriggerRandomDive IGNORADO (TXT=0)");
-            return;
-        }
-
-        if (keeperReactedThisRound)
-        {
-            Debug.Log("[GK] TriggerRandomDive IGNORADO (ya reaccionó esta ronda)");
-            return;
-        }
-
-        keeperReactedThisRound = true;
-        ElegirMovimiento();
-        Debug.Log("[GK] TriggerRandomDive OK - Animación lanzada");
-    }
-
-    // ====================================================
-    // 🔥 ANIMACIONES POR RESULTADO (NO dependen del TXT)
-    // ====================================================
+    // =====================================================
+    // 🎉 RESULTADOS (si quieres que SIEMPRE pueda animar aquí)
+    // =====================================================
     public void PlayCelebrate()
     {
         if (animator == null) return;
 
-        StopAllCoroutines();
-
+        animator.enabled = true;
         animator.applyRootMotion = true;
-        animator.SetInteger(DiveDir, DIR_CELEBRATE);
+        animator.SetInteger(DiveDir, 4);
         animator.Update(0f);
-
-        Debug.Log("[GK] PlayCelebrate()");
     }
 
     public void PlayDisappointed()
     {
         if (animator == null) return;
 
-        StopAllCoroutines();
-
+        animator.enabled = true;
         animator.applyRootMotion = true;
-        animator.SetInteger(DiveDir, DIR_DISAPPOINTED);
+        animator.SetInteger(DiveDir, 5);
         animator.Update(0f);
-
-        Debug.Log("[GK] PlayDisappointed()");
     }
 
     public void RearmFromExternalTrigger()
