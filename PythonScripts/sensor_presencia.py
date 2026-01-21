@@ -7,7 +7,7 @@ BAUDRATE = 115200
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # PythonScripts
 PARENT_DIR = os.path.dirname(BASE_DIR)  # Sube un nivel
-OUT_FILE = os.path.join(PARENT_DIR, "Config", "presencia.txt")
+OUT_FILE = os.path.join(PARENT_DIR, "Config", "keeper_move.txt")
 os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
 
 

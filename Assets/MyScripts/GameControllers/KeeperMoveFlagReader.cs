@@ -4,7 +4,7 @@ using UnityEngine;
 public class KeeperMoveFlagReader : MonoBehaviour
 {
     [Header("Nombre del archivo (en carpeta Config)")]
-    public string fileName = "presencia.txt";
+    public string fileName = "keeper_move.txt";
 
     [Header("Frecuencia de lectura (segundos)")]
     public float pollInterval = 0.1f;
