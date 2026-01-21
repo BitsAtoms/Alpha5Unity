@@ -22,6 +22,9 @@ public class GameManager : MonoBehaviour
     [Header("Reset Pelota (WASD)")]
     public Transform ballStartPoint;
 
+    [Header("Timeout de ronda (resultado por TXT)")]
+    public float roundTimeoutSeconds = 2f;
+
     int score = 0;
     int attempts = 0;
 
@@ -33,8 +36,11 @@ public class GameManager : MonoBehaviour
     Vector3 ballStartPos;
     Quaternion ballStartRot;
 
-    // 🔥 AÑADIDO: para empezar con botón Start
     bool started = false;
+
+    // evita doble resolución (gol + timeout, etc.)
+    bool roundResolved = false;
+    Coroutine coRoundTimeout;
 
     void OnEnable() { I = this; }
     void OnDisable() { if (I == this) I = null; }
@@ -63,18 +69,22 @@ public class GameManager : MonoBehaviour
 
         state = GameState.WaitingForBall;
 
-        // 🔥 AÑADIDO
         started = false;
+        roundResolved = false;
+        shotArmed = false;
+        shotTimer = 0f;
+
         Debug.Log("[GM] Esperando START...");
     }
 
     void Start()
     {
-        // 🔥 ya NO arranca solo
-        // BeginGame() se llamará desde el botón Start
+        // No arrancamos automáticamente: BeginGame() lo llama el botón START
     }
 
-    // 🔥 AÑADIDO: lo llama el botón Start
+    // =========================================================
+    // START DESDE BOTÓN
+    // =========================================================
     public void BeginGame()
     {
         if (started) return;
@@ -89,49 +99,49 @@ public class GameManager : MonoBehaviour
 
     void ApplyModeIfAny()
     {
-        if (GameSettings.I == null) return;
-
-        if (GameSettings.I.Mode == GameMode.Nino)
-        {
-            var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
-            if (keeper != null)
-                keeper.moveSpeed *= 0.7f;
-        }
+        // Si tienes GameSettings / GameMode en tu proyecto, aquí puedes ajustar dificultad.
+        // Si no lo usas, no pasa nada, se queda vacío.
+        // Ejemplo (si existe en tu proyecto):
+        // if (GameSettings.I != null && GameSettings.I.Mode == GameMode.Nino) { ... }
     }
 
+    // =========================================================
+    // UPDATE (si aún quieres usar shotTimeout clásico, se mantiene)
+    // =========================================================
     void Update()
     {
         if (!started) return;
 
+        // Si mantienes el timeout clásico cuando se arma el tiro:
         if (state != GameState.ShotInProgress) return;
 
         if (shotArmed)
         {
             shotTimer += Time.deltaTime;
             if (shotTimer >= GetShotTimeout())
+            {
+                // Esto sería fallo “clásico”; pero el resultado principal lo decide el TXT.
+                // Puedes dejarlo o quitarlo. Lo dejamos por compatibilidad.
                 ShotFail();
+            }
         }
     }
 
-    public bool CanShoot()
+    // 🔥 AÑADIDO: lo usa GoalResultFlagReader para decidir si lee o no
+    public bool IsShotArmed()
     {
-        bool ok = (state == GameState.ReadyToShoot || state == GameState.ShotInProgress);
-        Debug.Log($"[GM] CanShoot() = {ok} | state={state} | shotArmed={shotArmed}");
-        return ok;
+        return shotArmed;
     }
 
+    // =========================================================
+    // ARMAR VENTANA DE TIRO (si algún sistema la usa)
+    // =========================================================
     public void ArmShotWindow()
     {
         if (!started) return;
 
-        if (state == GameState.EndGame)
-        {
-            Debug.Log("[GM] ArmShotWindow() IGNORADO → Juego terminado");
-            return;
-        }
-
-        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
-            return;
+        if (state == GameState.EndGame) return;
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
 
         shotArmed = true;
         shotTimer = 0f;
@@ -139,18 +149,27 @@ public class GameManager : MonoBehaviour
         ball?.ResetFlags();
 
         state = GameState.ShotInProgress;
-        Debug.Log("[GM] Ventana de tiro ACTIVADA");
+        Debug.Log("[GM] Ventana de tiro ACTIVADA (shotArmed=true)");
     }
 
+    // =========================================================
+    // RESULTADOS (AHORA DEBEN FUNCIONAR DESDE TXT)
+    // =========================================================
     public void GoalScored()
     {
-        Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed} | state={state}");
+        if (!started) return;
 
-        if (!shotArmed)
-        {
-            Debug.Log("[GM] GoalScored() IGNORADO → shotArmed = false");
+        // Si ya se resolvió (por timeout u otro), ignorar
+        if (roundResolved) return;
+
+        // Solo aceptar gol si estamos en ronda jugable
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
             return;
-        }
+
+        roundResolved = true;
+        StopRoundTimeout();
+
+        Debug.Log("[GM] GoalScored() (por TXT o colisión)");
 
         shotArmed = false;
         shotTimer = 0f;
@@ -158,39 +177,87 @@ public class GameManager : MonoBehaviour
         score++;
         attempts++;
 
-        var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
-        if (keeperAnim != null)
-            keeperAnim.PlayDisappointed();
+        // Portero: GOL -> decepción
+        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        if (keeper != null)
+            keeper.PlayDisappointed();
 
         StartCoroutine(Co_RestartRound("¡GOL!"));
     }
 
     public void ShotFail()
     {
-        Debug.Log($"[GM] ShotFail() | shotArmed={shotArmed} | state={state}");
+        if (!started) return;
 
-        if (!shotArmed)
-        {
-            Debug.Log("[GM] ShotFail() IGNORADO → shotArmed = false");
+        if (roundResolved) return;
+
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
             return;
-        }
+
+        roundResolved = true;
+        StopRoundTimeout();
+
+        Debug.Log("[GM] ShotFail() (por TXT o timeout)");
 
         shotArmed = false;
         shotTimer = 0f;
 
         attempts++;
 
-        var keeperAnim = FindFirstObjectByType<GoalkeeperAutoReact>();
-        if (keeperAnim != null)
-            keeperAnim.PlayCelebrate();
+        // Portero: FALLO -> celebración
+        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        if (keeper != null)
+            keeper.PlayCelebrate();
 
         StartCoroutine(Co_RestartRound("Has fallado"));
     }
 
+    // =========================================================
+    // TIMEOUT DE RONDA (4s si no llega resultado)
+    // =========================================================
+    void StartRoundTimeout()
+    {
+        StopRoundTimeout();
+        roundResolved = false;
+        coRoundTimeout = StartCoroutine(Co_RoundTimeout());
+        Debug.Log("[GM] RoundTimeout START -> " + roundTimeoutSeconds + "s");
+    }
+
+    void StopRoundTimeout()
+    {
+        if (coRoundTimeout != null)
+        {
+            StopCoroutine(coRoundTimeout);
+            coRoundTimeout = null;
+            Debug.Log("[GM] RoundTimeout STOP");
+        }
+    }
+
+    IEnumerator Co_RoundTimeout()
+    {
+        // Realtime para que funcione aunque haya timeScale o contadores externos
+        yield return new WaitForSecondsRealtime(roundTimeoutSeconds);
+
+        if (roundResolved) yield break;
+
+        Debug.Log("[GM] RoundTimeout -> FAIL automático (no hubo resultado TXT)");
+
+        // Forzamos fallo aunque no exista shotArmed
+        ShotFail();
+    }
+
+    // =========================================================
+    // RONDAS
+    // =========================================================
     IEnumerator Co_RestartRound(string resultMsg)
     {
         state = GameState.ShowingResult;
 
+        StopRoundTimeout();
+        shotArmed = false;
+        shotTimer = 0f;
+
+        // Fin del juego (reinicio como antes)
         if (attempts >= GetMaxAttempts())
         {
             state = GameState.EndGame;
@@ -203,8 +270,10 @@ public class GameManager : MonoBehaviour
 
             score = 0;
             attempts = 0;
+
             shotArmed = false;
             shotTimer = 0f;
+            roundResolved = false;
 
             ResetPositions();
             yield return StartCoroutine(Co_StartRound());
@@ -217,6 +286,7 @@ public class GameManager : MonoBehaviour
         Set(uiMessage, "");
         Set(uiScore, "");
 
+        // Progresivo (si existe)
         var prog = FindFirstObjectByType<ProgressiveRoundController>();
         if (prog != null)
             prog.OnNewRound(attempts);
@@ -243,19 +313,32 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("[GM] Ronda lista → Se puede chutar");
 
-        // =========================================================
-        // 🔥🔥🔥 AÑADIDO: EN CADA NUEVA RONDA, PORTERO HACE 1 ANIMACIÓN
-        // si el TXT está en 1 (externalMoveAllowed=true)
-        // =========================================================
+        // 🔥 IMPORTANTE: aquí empieza el conteo de 4s para que llegue resultado (TXT)
+        StartRoundTimeout();
+        // ==============================================
+        // 🔥 AÑADIDO: PORTERO POR RONDA SEGÚN keeper_move.txt
+        // ==============================================
+        var keeperReader = FindFirstObjectByType<KeeperMoveFlagReaderTimestamp>(FindObjectsInactive.Include);
+        if (keeperReader != null)
+            keeperReader.ForceReadNow(); // lee el 0/1 ahora mismo
+
         var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeper != null)
         {
-            keeper.TriggerRandomDiveThisRound_NoShotWindow();
+            // Si tu portero tiene método RefreshExternalState, úsalo (si no, no pasa nada)
+            // keeper.RefreshExternalState();
+
+            keeper.TriggerPerRoundAction(); // si TXT=0 no hace nada, si TXT=1 hace 1..3
         }
+
     }
 
+    // =========================================================
+    // RESET POSICIONES
+    // =========================================================
     void ResetPositions()
     {
+        // Pelota WASD
         if (ball)
         {
             var rb = ball.GetComponent<Rigidbody>();
@@ -271,13 +354,20 @@ public class GameManager : MonoBehaviour
             ball.ResetFlags();
         }
 
+        // Portero
         var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
         if (keeper)
             keeper.ResetForNewRound();
 
+        // Dianas (si existen)
         var targets = FindObjectsByType<TargetScore>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var t in targets)
             t.ResetForNewRound();
+
+        // Reset flags internos de ronda
+        roundResolved = false;
+        shotArmed = false;
+        shotTimer = 0f;
     }
 
     void Set(TMP_Text t, string s)
@@ -285,12 +375,16 @@ public class GameManager : MonoBehaviour
         if (t) t.text = s;
     }
 
+    // Por si otro sistema fuerza reinicio
     public void ResetRoundExternally()
     {
         if (!started) return;
 
         if (state == GameState.ShowingResult || state == GameState.EndGame)
             return;
+
+        roundResolved = true;
+        StopRoundTimeout();
 
         shotArmed = false;
         StartCoroutine(Co_RestartRound(""));
@@ -301,6 +395,7 @@ public class GameManager : MonoBehaviour
         return attempts;
     }
 
+    // Puntos por diana
     public void AddTargetScore(int points)
     {
         score += points;
@@ -311,7 +406,21 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"[GM] Diana alcanzada +{points} puntos");
     }
+        // =====================================
+    // COMPATIBILIDAD CON SCRIPTS ANTIGUOS
+    // =====================================
+    public bool CanShoot()
+    {
+        // Se puede “chutar” cuando la ronda está activa
+        return started &&
+            (state == GameState.ReadyToShoot || state == GameState.ShotInProgress) &&
+            !roundResolved;
+    }
 
+
+    // =========================================================
+    // GETTERS CONFIG (no rompe si config es null)
+    // =========================================================
     int GetMaxAttempts() => config ? config.maxAttempts : 5;
     float GetShotTimeout() => config ? config.shotTimeout : 1f;
     float GetBannerDuration() => config ? config.bannerDuration : 4f;
