@@ -318,7 +318,7 @@ public class GameManager : MonoBehaviour
         // ==============================================
         // 🔥 AÑADIDO: PORTERO POR RONDA SEGÚN keeper_move.txt
         // ==============================================
-        var keeperReader = FindFirstObjectByType<KeeperMoveFlagReaderTimestamp>(FindObjectsInactive.Include);
+        var keeperReader = FindFirstObjectByType<KeeperMoveFlagReader>(FindObjectsInactive.Include);
         if (keeperReader != null)
             keeperReader.ForceReadNow(); // lee el 0/1 ahora mismo
 

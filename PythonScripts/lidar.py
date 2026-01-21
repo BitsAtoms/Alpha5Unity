@@ -367,7 +367,10 @@ async def main():
                     best = min(candidates, key=lambda c: c['dist'])
                     lat01, h01 = normalize_coords(best['lat'], best['h'])
                     
-                    atomic_overwrite(OUT_FILE, f"{lat01:.4f},{h01:.4f}\n")
+                    ts = time.time()
+                    atomic_overwrite(OUT_FILE, f"{lat01:.4f},{h01:.4f},{ts:.6f}\n") #salida: lat01,h01,timestamp(6decimas)
+
+
                     last_event_ts = now
                     event_count += 1
                     

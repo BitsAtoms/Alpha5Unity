@@ -1,6 +1,6 @@
 using System.IO;
 using UnityEngine;
-
+/*
 public class GoalResultFlagReaderTimestamp : MonoBehaviour
 {
     [Header("Archivo en ../Config")]
@@ -123,3 +123,4 @@ public class GoalResultFlagReaderTimestamp : MonoBehaviour
         }
     }
 }
+*/

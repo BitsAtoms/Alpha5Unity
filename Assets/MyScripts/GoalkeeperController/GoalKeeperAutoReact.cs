@@ -17,6 +17,15 @@ public class GoalkeeperAutoReact : MonoBehaviour
     public float moveDistance = 1.5f;
     public float moveSpeed = 5f;
 
+    private const int DIR_LEFT = 1;
+    private const int DIR_RIGHT = 2;
+    private const int DIR_JUMP = 3;
+    private const int DIR_CELEBRATE = 4;
+    private const int DIR_DISAPPOINTED = 5;
+
+    private bool AllowMove() => externalMoveAllowed;
+
+
     // ===============================
     // CONTROL POR TXT
     // ===============================
@@ -239,4 +248,48 @@ public class GoalkeeperAutoReact : MonoBehaviour
         keeperReactedThisRound = false;
         Debug.Log("[GK] RearmFromExternalTrigger() -> listo para nueva animación por TXT");
     }
+     // ✅ Este es el que vamos a llamar desde el TXT
+    public void TriggerRandomDiveThisRound_NoShotWindow()
+    {
+        if (!AllowMove())
+        {
+            Debug.Log("[GK] TriggerRandomDive IGNORADO (TXT=0)");
+            return;
+        }
+
+        if (keeperReactedThisRound)
+        {
+            Debug.Log("[GK] TriggerRandomDive IGNORADO (ya reaccionó esta ronda)");
+            return;
+        }
+
+        keeperReactedThisRound = true;
+        ElegirMovimiento();
+        Debug.Log("[GK] TriggerRandomDive OK - Animación lanzada");
+    }
+     private void ElegirMovimiento()
+    {
+        if (!AllowMove())
+        {
+            Debug.Log("[GK] ElegirMovimiento BLOQUEADO (TXT=0)");
+            return;
+        }
+
+        int diveValue = Random.Range(1, 4);
+
+        if (animator != null)
+        {
+            animator.applyRootMotion = true;
+            animator.SetInteger(DiveDir, diveValue);
+            animator.Update(0f);
+            Debug.Log("[GK] DiveDirection=" + diveValue);
+        }
+
+        if (moverBase && (diveValue == DIR_LEFT || diveValue == DIR_RIGHT))
+        {
+            StopAllCoroutines();
+            StartCoroutine(MoverBaseExtra(diveValue));
+        }
+    }
+
 }

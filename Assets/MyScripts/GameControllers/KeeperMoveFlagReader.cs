@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
-/*
-public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
+
+public class KeeperMoveFlagReader : MonoBehaviour
 {
     [Header("Nombre del archivo (en carpeta Config)")]
     public string fileName = "keeper_move.txt";
@@ -74,7 +74,10 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
         {
             string dir = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(dir))
+            {
                 Directory.CreateDirectory(dir);
+                Debug.Log("[KEEPER FLAG] 📁 Directorio creado: " + dir);
+            }
 
             if (!File.Exists(filePath))
             {
@@ -95,6 +98,11 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
 
     void ReadFlag()
     {
+        readCount++;
+        
+        // Debug CADA lectura (no solo cada 100)
+        Debug.Log($"[KEEPER FLAG] 🔄 LECTURA #{readCount} - Frame {Time.frameCount}");
+
         if (keeper == null)
         {
             keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
@@ -108,42 +116,8 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
         string raw;
         try
         {
-            raw = File.ReadAllText(filePath);
-            string txt = raw.Trim();
-
-            if (string.IsNullOrWhiteSpace(txt))
-                return;
-
-            // Formato: value,timestamp
-            // Aceptamos separador coma o punto y coma
-            string[] parts = txt.Split(',', ';');
-
-            if (parts.Length < 2)
-            {
-                Debug.LogWarning("[KEEPER TS] Formato inválido (esperado value,ts): '" + txt + "'");
-                return;
-            }
-
-            int v;
-            if (!int.TryParse(parts[0].Trim(), out v))
-                v = 0;
-
-            v = (v != 0) ? 1 : 0;
-
-            long ts;
-            if (!long.TryParse(parts[1].Trim(), out ts))
-            {
-                Debug.LogWarning("[KEEPER TS] Timestamp inválido: '" + parts[1] + "'");
-                return;
-            }
-
-            // ✅ Solo aplicamos si el timestamp cambió
-            if (ts == lastTimestamp)
-                return;
-
-            lastTimestamp = ts;
-
-            Apply(v, ts, "read raw='" + raw + "'");
+            raw = File.ReadAllText(filePath).Trim();
+            Debug.Log($"[KEEPER FLAG]    Contenido leído: '{raw}'");
         }
         catch (System.Exception e)
         {
@@ -207,4 +181,3 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
         }
     }
 }
-*/

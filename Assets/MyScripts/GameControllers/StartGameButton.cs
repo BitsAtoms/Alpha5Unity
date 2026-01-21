@@ -27,7 +27,7 @@ public class StartGameButton : MonoBehaviour
             keeperFlagReaderObject.SetActive(true);
             Debug.Log("✅ [UI] keeperFlagReaderObject activado");
 
-            var reader = keeperFlagReaderObject.GetComponent<KeeperMoveFlagReaderTimestamp>();
+            var reader = keeperFlagReaderObject.GetComponent<KeeperMoveFlagReader>();
             if (reader != null)
             {
                 reader.ForceReadNow();
