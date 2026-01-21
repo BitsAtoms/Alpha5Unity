@@ -47,10 +47,7 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
         {
             string dir = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(dir))
-            {
                 Directory.CreateDirectory(dir);
-                Debug.Log("[KEEPER FLAG] 📁 Directorio creado: " + dir);
-            }
 
             if (!File.Exists(filePath))
             {
@@ -68,11 +65,6 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
 
     public void ForceReadNow()
     {
-        readCount++;
-        
-        // Debug CADA lectura (no solo cada 100)
-        Debug.Log($"[KEEPER FLAG] 🔄 LECTURA #{readCount} - Frame {Time.frameCount}");
-
         if (keeper == null)
             keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
 
@@ -100,7 +92,6 @@ public class KeeperMoveFlagReaderTimestamp : MonoBehaviour
                 Debug.LogWarning("[KEEPER TS] Formato inválido (esperado value,ts): '" + txt + "'");
                 return;
             }
-        }
 
             int v;
             if (!int.TryParse(parts[0].Trim(), out v))

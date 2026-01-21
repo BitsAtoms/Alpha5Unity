@@ -15,7 +15,7 @@ PORT = "COM3"
 BAUDRATE = 460800
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OUT_FILE = os.path.join(BASE_DIR, "Config", "detection_ball.txt")
+OUT_FILE = os.path.join(BASE_DIR, "Config", "goal_result.txt")
 os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
 
 # Área de detección (2x2 metros)
