@@ -232,4 +232,11 @@ public class GoalkeeperAutoReact : MonoBehaviour
         animator.SetInteger(DiveDir, 5);
         animator.Update(0f);
     }
+
+    public void RearmFromExternalTrigger()
+    {
+        // Solo rearma el candado, sin mover posiciones
+        keeperReactedThisRound = false;
+        Debug.Log("[GK] RearmFromExternalTrigger() -> listo para nueva animación por TXT");
+    }
 }
