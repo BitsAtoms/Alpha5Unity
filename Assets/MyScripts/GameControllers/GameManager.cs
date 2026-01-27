@@ -8,8 +8,8 @@ public class GameManager : MonoBehaviour
     public static GameManager I;
     public static GameManager Instance => I;
 
-    [Header("Config")]
-    public GameConfig config;
+    [Header("Config (ScriptableObject)")]
+    public GameConfig config; // si es null usa valores por defecto
 
     [Header("UI (TMP)")]
     public TMP_Text uiMessage;
@@ -22,8 +22,11 @@ public class GameManager : MonoBehaviour
     [Header("Reset Pelota (WASD)")]
     public Transform ballStartPoint;
 
-    [Header("Timeout de ronda (resultado por TXT)")]
-    public float roundTimeoutSeconds = 2f;
+    [Header("Regla: si pasan X segundos desde que empieza la ronda y NO hay gol => fallo automático")]
+    public float failAfterSeconds = 4f;
+
+    // Estado
+    GameState state = GameState.WaitingForBall;
 
     int score = 0;
     int attempts = 0;
@@ -31,16 +34,22 @@ public class GameManager : MonoBehaviour
     bool shotArmed = false;
     float shotTimer = 0f;
 
-    GameState state = GameState.WaitingForBall;
+    // Start por ronda
+    bool startPressedThisRound = false;
+
+    // Portero por timestamp
+    bool keeperActionDoneThisRound = false;
+
+    // Contador de ronda (para fail automático)
+    float roundTimer = 0f;
+
+    // Cache refs (evita Find cada frame)
+    KeeperMoveFlagReaderTimestamp keeperReader;
+    GoalkeeperAutoReact keeper;
+    StartGameButton startButtonUI;
 
     Vector3 ballStartPos;
     Quaternion ballStartRot;
-
-    bool started = false;
-
-    // evita doble resolución (gol + timeout, etc.)
-    bool roundResolved = false;
-    Coroutine coRoundTimeout;
 
     void OnEnable() { I = this; }
     void OnDisable() { if (I == this) I = null; }
@@ -49,6 +58,7 @@ public class GameManager : MonoBehaviour
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
 
+        // Guardar posición inicial pelota (para reset)
         if (ball != null)
         {
             if (ballStartPoint != null)
@@ -67,239 +77,267 @@ public class GameManager : MonoBehaviour
         Set(uiScore, "");
         Set(uiAttempts, "");
 
+        // Cache UI start button controller (puede estar en escena como UIController)
+        startButtonUI = FindFirstObjectByType<StartGameButton>(FindObjectsInactive.Include);
+
+        // Estado inicial: esperando start
         state = GameState.WaitingForBall;
-
-        started = false;
-        roundResolved = false;
-        shotArmed = false;
-        shotTimer = 0f;
-
         Debug.Log("[GM] Esperando START...");
     }
 
     void Start()
     {
-        // No arrancamos automáticamente: BeginGame() lo llama el botón START
-    }
-
-    // =========================================================
-    // START DESDE BOTÓN
-    // =========================================================
-    public void BeginGame()
-    {
-        if (started) return;
-        started = true;
-
-        Debug.Log("[GM] BeginGame() -> empezando partida");
-
-        ApplyModeIfAny();
+        // Al arrancar: resetea posiciones y muestra botón start (si existe)
         ResetPositions();
-        StartCoroutine(Co_StartRound());
+        ShowStartForNewRound();
     }
 
-    void ApplyModeIfAny()
-    {
-        // Si tienes GameSettings / GameMode en tu proyecto, aquí puedes ajustar dificultad.
-        // Si no lo usas, no pasa nada, se queda vacío.
-        // Ejemplo (si existe en tu proyecto):
-        // if (GameSettings.I != null && GameSettings.I.Mode == GameMode.Nino) { ... }
-    }
-
-    // =========================================================
-    // UPDATE (si aún quieres usar shotTimeout clásico, se mantiene)
-    // =========================================================
     void Update()
     {
-        if (!started) return;
+        // 0) Si no estamos en ronda jugable, no hacemos nada
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
+            return;
 
-        // Si mantienes el timeout clásico cuando se arma el tiro:
-        if (state != GameState.ShotInProgress) return;
+        // Si aún no pulsaron Start en esta ronda, NO contamos tiempo ni leemos timestamp
+        if (!startPressedThisRound)
+            return;
 
+        // 1) Fail automático por tiempo desde inicio de ronda
+        roundTimer += Time.deltaTime;
+        if (roundTimer >= failAfterSeconds)
+        {
+            Debug.Log("[GM] Timeout de ronda -> ShotFail(force=true)");
+            ShotFail(force: true);
+            return;
+        }
+
+        // 2) Timeout de ventana de tiro (si estaba armado)
         if (shotArmed)
         {
             shotTimer += Time.deltaTime;
             if (shotTimer >= GetShotTimeout())
             {
-                // Esto sería fallo “clásico”; pero el resultado principal lo decide el TXT.
-                // Puedes dejarlo o quitarlo. Lo dejamos por compatibilidad.
-                ShotFail();
+                Debug.Log("[GM] Timeout shot window -> ShotFail()");
+                ShotFail(force: false);
+                return;
+            }
+        }
+
+        // 3) Portero SOLO cuando cambia timestamp (1 acción por ronda)
+        if (!keeperActionDoneThisRound)
+        {
+            if (keeperReader == null)
+                keeperReader = FindFirstObjectByType<KeeperMoveFlagReaderTimestamp>(FindObjectsInactive.Include);
+
+            if (keeper == null)
+                keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
+
+            if (keeperReader != null)
+            {
+                // lee el archivo y si cambió -> pulse=true (lo verás en consola por el reader)
+                keeperReader.ForceReadNow();
+
+                // consume el pulso SOLO una vez
+                if (keeperReader.ConsumePulse())
+                {
+                    keeperActionDoneThisRound = true;
+
+                    Debug.Log("✅ [GM] PULSO TIMESTAMP -> portero reacciona + armShotWindow()");
+                    ArmShotWindow();
+
+                    if (keeper != null)
+                        keeper.TriggerPerRoundAction();
+                    else
+                        Debug.LogWarning("[GM] keeper == null, no puedo animar portero");
+                }
+            }
+            else
+            {
+                // Si no hay reader, no habrá portero por timestamp
+                // (lo dejamos en silencio para no spamear)
             }
         }
     }
 
-    // 🔥 AÑADIDO: lo usa GoalResultFlagReader para decidir si lee o no
-    public bool IsShotArmed()
+    // ============================
+    // START BUTTON (por ronda)
+    // ============================
+    public void BeginGame()
     {
-        return shotArmed;
+        startPressedThisRound = true;
+        Debug.Log("✅ [GM] Start PRESIONADO en esta ronda");
+
+        // Inicia visualmente la ronda
+        StopAllCoroutines();
+        StartCoroutine(Co_StartRound());
     }
 
-    // =========================================================
-    // ARMAR VENTANA DE TIRO (si algún sistema la usa)
-    // =========================================================
+    void ShowStartForNewRound()
+    {
+        startPressedThisRound = false;
+        keeperActionDoneThisRound = false;
+        shotArmed = false;
+        shotTimer = 0f;
+        roundTimer = 0f;
+
+        state = GameState.WaitingForBall;
+
+        // Mostrar botón Start + ocultar HUD (lo hace tu StartGameButton.ShowForNewRound)
+        if (startButtonUI == null)
+            startButtonUI = FindFirstObjectByType<StartGameButton>(FindObjectsInactive.Include);
+
+        if (startButtonUI != null)
+            startButtonUI.ShowForNewRound();
+
+        Debug.Log("[GM] Esperando START...");
+    }
+
+    // ============================
+    //         ESTADO TIRO
+    // ============================
+    public bool CanShoot()
+    {
+        bool ok = (state == GameState.ReadyToShoot || state == GameState.ShotInProgress)
+                  && !state.Equals(GameState.ShowingResult)
+                  && !state.Equals(GameState.EndGame)
+                  && startPressedThisRound;
+
+        // (si quieres ver esto en consola descomenta)
+        // Debug.Log($"[GM] CanShoot()={ok} state={state} startPressed={startPressedThisRound} shotArmed={shotArmed}");
+
+        return ok;
+    }
+
     public void ArmShotWindow()
     {
-        if (!started) return;
-
         if (state == GameState.EndGame) return;
-        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
 
+        // Armar ventana tiro
         shotArmed = true;
         shotTimer = 0f;
-
         ball?.ResetFlags();
 
         state = GameState.ShotInProgress;
+
         Debug.Log("[GM] Ventana de tiro ACTIVADA (shotArmed=true)");
     }
 
-    // =========================================================
-    // RESULTADOS (AHORA DEBEN FUNCIONAR DESDE TXT)
-    // =========================================================
+    // ============================
+    //           RESULTADOS
+    // ============================
     public void GoalScored()
     {
-        if (!started) return;
+        Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed} | state={state}");
 
-        // Si ya se resolvió (por timeout u otro), ignorar
-        if (roundResolved) return;
+        // Permitimos gol sólo si la ronda está en juego y Start fue pulsado
+        if (!startPressedThisRound) return;
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
 
-        // Solo aceptar gol si estamos en ronda jugable
-        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
-            return;
+        // Si quieres exigir que solo cuente gol cuando shotArmed=true, deja esto:
+        // if (!shotArmed) return;
 
-        roundResolved = true;
-        StopRoundTimeout();
-
-        Debug.Log("[GM] GoalScored() (por TXT o colisión)");
-
+        // Bloquear dobles
         shotArmed = false;
         shotTimer = 0f;
 
         score++;
         attempts++;
 
-        // Portero: GOL -> decepción
-        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        // Portero: GOL -> decepción (si lo tienes)
+        if (keeper == null)
+            keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
         if (keeper != null)
             keeper.PlayDisappointed();
 
         StartCoroutine(Co_RestartRound("¡GOL!"));
     }
 
-    public void ShotFail()
+    public void ShotFail(bool force)
     {
-        if (!started) return;
+        Debug.Log($"[GM] ShotFail(force={force}) | shotArmed={shotArmed} | state={state}");
 
-        if (roundResolved) return;
+        if (!startPressedThisRound) return;
+        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
 
-        if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress)
+        // Si no es forzado y no estaba armado, no contamos
+        if (!force && !shotArmed)
             return;
 
-        roundResolved = true;
-        StopRoundTimeout();
-
-        Debug.Log("[GM] ShotFail() (por TXT o timeout)");
-
+        // Bloquear dobles
         shotArmed = false;
         shotTimer = 0f;
 
         attempts++;
 
-        // Portero: FALLO -> celebración
-        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        // Portero: fallo -> celebra (si lo tienes)
+        if (keeper == null)
+            keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
         if (keeper != null)
             keeper.PlayCelebrate();
 
         StartCoroutine(Co_RestartRound("Has fallado"));
     }
 
-    // =========================================================
-    // TIMEOUT DE RONDA (4s si no llega resultado)
-    // =========================================================
-    void StartRoundTimeout()
+    // overload para mantener compatibilidad con scripts viejos que llamen ShotFail()
+    public void ShotFail()
     {
-        StopRoundTimeout();
-        roundResolved = false;
-        coRoundTimeout = StartCoroutine(Co_RoundTimeout());
-        Debug.Log("[GM] RoundTimeout START -> " + roundTimeoutSeconds + "s");
+        ShotFail(force: false);
     }
 
-    void StopRoundTimeout()
-    {
-        if (coRoundTimeout != null)
-        {
-            StopCoroutine(coRoundTimeout);
-            coRoundTimeout = null;
-            Debug.Log("[GM] RoundTimeout STOP");
-        }
-    }
-
-    IEnumerator Co_RoundTimeout()
-    {
-        // Realtime para que funcione aunque haya timeScale o contadores externos
-        yield return new WaitForSecondsRealtime(roundTimeoutSeconds);
-
-        if (roundResolved) yield break;
-
-        Debug.Log("[GM] RoundTimeout -> FAIL automático (no hubo resultado TXT)");
-
-        // Forzamos fallo aunque no exista shotArmed
-        ShotFail();
-    }
-
-    // =========================================================
-    // RONDAS
-    // =========================================================
+    // ============================
+    //           RONDAS
+    // ============================
     IEnumerator Co_RestartRound(string resultMsg)
     {
         state = GameState.ShowingResult;
 
-        StopRoundTimeout();
-        shotArmed = false;
-        shotTimer = 0f;
-
-        // Fin del juego (reinicio como antes)
-        if (attempts >= GetMaxAttempts())
-        {
-            state = GameState.EndGame;
-
-            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{GetMaxAttempts()}");
-            Set(uiScore, "");
-            Set(uiAttempts, "");
-
-            yield return new WaitForSeconds(GetEndGameRestartDelay());
-
-            score = 0;
-            attempts = 0;
-
-            shotArmed = false;
-            shotTimer = 0f;
-            roundResolved = false;
-
-            ResetPositions();
-            yield return StartCoroutine(Co_StartRound());
-            yield break;
-        }
-
+        // Mostrar resultado
         Set(uiMessage, resultMsg);
         yield return new WaitForSeconds(GetResultDisplayDuration());
 
         Set(uiMessage, "");
         Set(uiScore, "");
+        Set(uiAttempts, "");
 
-        // Progresivo (si existe)
-        var prog = FindFirstObjectByType<ProgressiveRoundController>();
+        // Fin del juego
+        if (attempts >= GetMaxAttempts())
+        {
+            state = GameState.EndGame;
+
+            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{GetMaxAttempts()}");
+            yield return new WaitForSeconds(GetEndGameRestartDelay());
+
+            // Reset completo
+            score = 0;
+            attempts = 0;
+
+            ResetPositions();
+            ShowStartForNewRound();
+            yield break;
+        }
+
+        // Progresivo (si lo usas)
+        var prog = FindFirstObjectByType<ProgressiveRoundController>(FindObjectsInactive.Include);
         if (prog != null)
             prog.OnNewRound(attempts);
 
+        // Reset posiciones para nueva ronda
         ResetPositions();
-        yield return StartCoroutine(Co_StartRound());
+
+        // ✅ importante: aquí NO empezamos automáticamente
+        // mostramos Start otra vez, y la ronda arranca cuando pulses el botón.
+        ShowStartForNewRound();
     }
 
     IEnumerator Co_StartRound()
     {
-        Debug.Log("[GM] Iniciando ronda...");
-
+        // Al pulsar Start, empezamos ronda real
         state = GameState.ReadyToShoot;
+
+        keeperActionDoneThisRound = false;
+        shotArmed = false;
+        shotTimer = 0f;
+        roundTimer = 0f;
 
         Set(uiAttempts, $"Intento: {attempts + 1}/{GetMaxAttempts()}");
         Set(uiMessage, "Listo para chutar");
@@ -311,34 +349,15 @@ public class GameManager : MonoBehaviour
         Set(uiMessage, "");
         Set(uiScore, "");
 
-        Debug.Log("[GM] Ronda lista → Se puede chutar");
-
-        // 🔥 IMPORTANTE: aquí empieza el conteo de 4s para que llegue resultado (TXT)
-        StartRoundTimeout();
-        // ==============================================
-        // 🔥 AÑADIDO: PORTERO POR RONDA SEGÚN keeper_move.txt
-        // ==============================================
-        var keeperReader = FindFirstObjectByType<KeeperMoveFlagReaderTimestamp>(FindObjectsInactive.Include);
-        if (keeperReader != null)
-            keeperReader.ForceReadNow(); // lee el 0/1 ahora mismo
-
-        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
-        if (keeper != null)
-        {
-            // Si tu portero tiene método RefreshExternalState, úsalo (si no, no pasa nada)
-            // keeper.RefreshExternalState();
-
-            keeper.TriggerPerRoundAction(); // si TXT=0 no hace nada, si TXT=1 hace 1..3
-        }
-
+        Debug.Log("[GM] Ronda lista -> Se puede chutar");
     }
 
-    // =========================================================
-    // RESET POSICIONES
-    // =========================================================
+    // ============================
+    //        RESET POSICIONES
+    // ============================
     void ResetPositions()
     {
-        // Pelota WASD
+        // Reset pelota (WASD)
         if (ball)
         {
             var rb = ball.GetComponent<Rigidbody>();
@@ -354,20 +373,17 @@ public class GameManager : MonoBehaviour
             ball.ResetFlags();
         }
 
-        // Portero
-        var keeper = FindFirstObjectByType<GoalkeeperAutoReact>();
+        // Reset portero
+        if (keeper == null)
+            keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
+
         if (keeper)
             keeper.ResetForNewRound();
 
-        // Dianas (si existen)
+        // Reset dianas por ronda
         var targets = FindObjectsByType<TargetScore>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var t in targets)
             t.ResetForNewRound();
-
-        // Reset flags internos de ronda
-        roundResolved = false;
-        shotArmed = false;
-        shotTimer = 0f;
     }
 
     void Set(TMP_Text t, string s)
@@ -375,27 +391,24 @@ public class GameManager : MonoBehaviour
         if (t) t.text = s;
     }
 
-    // Por si otro sistema fuerza reinicio
     public void ResetRoundExternally()
     {
-        if (!started) return;
-
         if (state == GameState.ShowingResult || state == GameState.EndGame)
             return;
 
-        roundResolved = true;
-        StopRoundTimeout();
-
         shotArmed = false;
+        StopAllCoroutines();
         StartCoroutine(Co_RestartRound(""));
     }
 
-    public int GetCurrentAttempt()
-    {
-        return attempts;
-    }
+    // ============================
+    // LECTURA SEGURA
+    // ============================
+    public int GetCurrentAttempt() => attempts;
 
-    // Puntos por diana
+    // ============================
+    // PUNTOS POR DIANA
+    // ============================
     public void AddTargetScore(int points)
     {
         score += points;
@@ -406,21 +419,10 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"[GM] Diana alcanzada +{points} puntos");
     }
-        // =====================================
-    // COMPATIBILIDAD CON SCRIPTS ANTIGUOS
-    // =====================================
-    public bool CanShoot()
-    {
-        // Se puede “chutar” cuando la ronda está activa
-        return started &&
-            (state == GameState.ReadyToShoot || state == GameState.ShotInProgress) &&
-            !roundResolved;
-    }
 
-
-    // =========================================================
-    // GETTERS CONFIG (no rompe si config es null)
-    // =========================================================
+    // ============================
+    // Config getters (no rompe si config es null)
+    // ============================
     int GetMaxAttempts() => config ? config.maxAttempts : 5;
     float GetShotTimeout() => config ? config.shotTimeout : 1f;
     float GetBannerDuration() => config ? config.bannerDuration : 4f;

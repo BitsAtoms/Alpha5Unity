@@ -1,0 +1,957 @@
+fileFormatVersion: 2
+guid: 9f5d7bc436708144c9bf07ba0a1da5b5
+ModelImporter:
+  serializedVersion: 24200
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Eye_0
+    second: {fileID: 2100000, guid: 807240b68f568a04dafe850f179607c4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Facewear_4
+    second: {fileID: 2100000, guid: 747967925c00c614c86d560f059a1ec5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Glasses_3
+    second: {fileID: 2100000, guid: 4f1f0a71fb3199547ad254a4cb62d2f4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Headwear_5
+    second: {fileID: 2100000, guid: 760743c01c7682b41aed89401f547671, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Outfit_Bottom_6
+    second: {fileID: 2100000, guid: e3cc991081eac4443a6789141d4c84e6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Outfit_Footwear_7
+    second: {fileID: 2100000, guid: 0f920c538bd289f4281e30432af5483d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Outfit_Top_8
+    second: {fileID: 2100000, guid: ca52efe7237af464fac885de92e08b04, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Skin_1
+    second: {fileID: 2100000, guid: 09c18749ecbd4f84cb6b857aa74b2c35, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Wolf3D_Teeth_2
+    second: {fileID: 2100000, guid: ff62e2481e571d34db94874029bb7821, type: 2}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human:
+    - boneName: characters3d.com___Hips
+      humanName: Hips
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Upper_Leg
+      humanName: LeftUpperLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Upper_Leg
+      humanName: RightUpperLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Lower_Leg
+      humanName: LeftLowerLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Lower_Leg
+      humanName: RightLowerLeg
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Foot
+      humanName: LeftFoot
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Foot
+      humanName: RightFoot
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___Spine
+      humanName: Spine
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___Chest
+      humanName: Chest
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___Neck
+      humanName: Neck
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___Head
+      humanName: Head
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Shoulder
+      humanName: LeftShoulder
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Shoulder
+      humanName: RightShoulder
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Upper_Arm
+      humanName: LeftUpperArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Upper_Arm
+      humanName: RightUpperArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Lower_Arm
+      humanName: LeftLowerArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Lower_Arm
+      humanName: RightLowerArm
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Hand
+      humanName: LeftHand
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Hand
+      humanName: RightHand
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Toes
+      humanName: LeftToes
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Toes
+      humanName: RightToes
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Thumb_Proximal
+      humanName: Left Thumb Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Thumb_Intermediate
+      humanName: Left Thumb Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Thumb_Distal
+      humanName: Left Thumb Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Index_Proximal
+      humanName: Left Index Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Index_Intermediate
+      humanName: Left Index Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Index_Distal
+      humanName: Left Index Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Middle_Proximal
+      humanName: Left Middle Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Middle_Intermediate
+      humanName: Left Middle Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Middle_Distal
+      humanName: Left Middle Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Ring_Proximal
+      humanName: Left Ring Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Ring_Intermediate
+      humanName: Left Ring Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Ring_Distal
+      humanName: Left Ring Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Little_Proximal
+      humanName: Left Little Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Little_Intermediate
+      humanName: Left Little Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___L_Little_Distal
+      humanName: Left Little Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Thumb_Proximal
+      humanName: Right Thumb Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Thumb_Intermediate
+      humanName: Right Thumb Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Thumb_Distal
+      humanName: Right Thumb Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Index_Proximal
+      humanName: Right Index Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Index_Intermediate
+      humanName: Right Index Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Index_Distal
+      humanName: Right Index Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Middle_Proximal
+      humanName: Right Middle Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Middle_Intermediate
+      humanName: Right Middle Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Middle_Distal
+      humanName: Right Middle Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Ring_Proximal
+      humanName: Right Ring Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Ring_Intermediate
+      humanName: Right Ring Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Ring_Distal
+      humanName: Right Ring Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Little_Proximal
+      humanName: Right Little Proximal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Little_Intermediate
+      humanName: Right Little Intermediate
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___R_Little_Distal
+      humanName: Right Little Distal
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    - boneName: characters3d.com___Upper_Chest
+      humanName: UpperChest
+      limit:
+        min: {x: 0, y: 0, z: 0}
+        max: {x: 0, y: 0, z: 0}
+        value: {x: 0, y: 0, z: 0}
+        length: 0
+        modified: 0
+    skeleton:
+    - name: space soldier(Clone)
+      parentName: 
+      position: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: space_soldier
+      parentName: space soldier(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: -6.123234e-17, y: 1, z: 6.123234e-17, w: 6.123234e-17}
+      scale: {x: 1, y: 1.0000002, z: 1.0000002}
+    - name: mesh
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: mesh_1
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: mesh_2
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: mesh_3
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: WolfD_Glasses
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: WolfD_Facewear
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: WolfD_Headwear
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: WolfD_Outfit_Bottom
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: WolfD_Outfit_Footwear
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: WolfD_Outfit_Top
+      parentName: space_soldier
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Hips
+      parentName: space soldier(Clone)
+      position: {x: 5.3552395e-11, y: 0.010511187, z: -0.0000066756425}
+      rotation: {x: -0.0000000013205211, y: 0.000000008736342, z: -0.00000029451454,
+        w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Spine
+      parentName: characters3d.com___Hips
+      position: {x: -0, y: 0.0010154763, z: -0.000106588486}
+      rotation: {x: -0.052266687, y: -0.000000024117906, z: 0.00000029365444, w: 0.9986332}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Chest
+      parentName: characters3d.com___Spine
+      position: {x: -0, y: 0.0011912313, z: -7.1239763e-12}
+      rotation: {x: -6.938894e-18, y: -1.1360717e-13, z: 6.7394365e-13, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Upper_Chest
+      parentName: characters3d.com___Chest
+      position: {x: -0, y: 0.0013614055, z: -3.890912e-12}
+      rotation: {x: -6.938894e-18, y: 0, z: -7.0997474e-30, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Shoulder
+      parentName: characters3d.com___Upper_Chest
+      position: {x: -0.00061802205, y: 0.0012415478, z: -0.000040931543}
+      rotation: {x: 0.53996557, y: -0.4449701, z: 0.568905, w: 0.43218738}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Upper_Arm
+      parentName: characters3d.com___L_Shoulder
+      position: {x: 1.1574996e-12, y: 0.0013646081, z: -4.1816806e-12}
+      rotation: {x: -0.11717224, y: -0.08917652, z: -0.011326264, w: 0.9890349}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Lower_Arm
+      parentName: characters3d.com___L_Upper_Arm
+      position: {x: -7.13225e-12, y: 0.0025667362, z: -2.11975e-11}
+      rotation: {x: 0.0000001295222, y: 0.1814676, z: -0.00000041632865, w: 0.98339695}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Hand
+      parentName: characters3d.com___L_Lower_Arm
+      position: {x: -2.1617553e-11, y: 0.002197758, z: -3.6937026e-11}
+      rotation: {x: 0.004097941, y: -0.15528466, z: 0.04295252, w: 0.98692703}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Thumb_Proximal
+      parentName: characters3d.com___L_Hand
+      position: {x: 0.0002760493, y: 0.00041584557, z: 0.000090970796}
+      rotation: {x: 0.06749441, y: 0.0114537, z: -0.33529308, w: 0.9396233}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Thumb_Intermediate
+      parentName: characters3d.com___L_Thumb_Proximal
+      position: {x: 0.000044411, y: 0.000403445, z: 5.6905682e-12}
+      rotation: {x: 0.0004876591, y: 0.008492499, z: -0.052267864, w: 0.9985969}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Thumb_Distal
+      parentName: characters3d.com___L_Thumb_Intermediate
+      position: {x: 0.0000020229054, y: 0.0004002815, z: 3.571458e-13}
+      rotation: {x: -0.00085883104, y: 0.011608508, z: -0.078821674, w: 0.9968208}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Thumb_Distal_Tip
+      parentName: characters3d.com___L_Thumb_Distal
+      position: {x: -0.000046433917, y: 0.00030155122, z: 3.7066053e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Little_Proximal
+      parentName: characters3d.com___L_Hand
+      position: {x: -0.00038061882, y: 0.0012100762, z: -0.000026309766}
+      rotation: {x: -0.010092596, y: 0.0153431, z: -0.042731725, w: 0.99891776}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Little_Intermediate
+      parentName: characters3d.com___L_Little_Proximal
+      position: {x: -0.00000045496205, y: 0.0002887267, z: -1.7068789e-12}
+      rotation: {x: -0.00000024675282, y: 0.0000481546, z: 0.0020553174, w: 0.9999979}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Little_Distal
+      parentName: characters3d.com___L_Little_Intermediate
+      position: {x: 0.0000005415189, y: 0.00021157303, z: 6.0762636e-13}
+      rotation: {x: 0.00000002016597, y: -0.000080453734, z: -0.001580999, w: 0.99999875}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Little_Distal_Tip
+      parentName: characters3d.com___L_Little_Distal
+      position: {x: -0.00000008656341, y: 0.00014757985, z: 1.6177848e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Index_Proximal
+      parentName: characters3d.com___L_Hand
+      position: {x: 0.00039371295, y: 0.0015192205, z: -0.000036436497}
+      rotation: {x: -0.010715373, y: 0.00025580142, z: -0.03451275, w: 0.9993468}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Index_Intermediate
+      parentName: characters3d.com___L_Index_Proximal
+      position: {x: 0.0000045897004, y: 0.00031486238, z: -2.4583046e-12}
+      rotation: {x: -0.0000009120965, y: -0.00005643215, z: -0.00073156785, w: 0.99999976}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Index_Distal
+      parentName: characters3d.com___L_Index_Intermediate
+      position: {x: 0.0000034558796, y: 0.00026382843, z: -3.1668934e-12}
+      rotation: {x: -0.00005673332, y: 0.0035739506, z: -0.02902107, w: 0.99957246}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Index_Distal_Tip
+      parentName: characters3d.com___L_Index_Distal
+      position: {x: -0.000008045567, y: 0.00017901878, z: -1.3301079e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Ring_Proximal
+      parentName: characters3d.com___L_Hand
+      position: {x: -0.00014029369, y: 0.0014452857, z: -0.000024516663}
+      rotation: {x: -0.0101663815, y: 0.013363431, z: -0.042065673, w: 0.9989737}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Ring_Intermediate
+      parentName: characters3d.com___L_Ring_Proximal
+      position: {x: -0.00000008266444, y: 0.00030105407, z: 3.2500218e-12}
+      rotation: {x: 0.0000008536633, y: 0.00017335109, z: 0.0031870143, w: 0.99999493}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Ring_Distal
+      parentName: characters3d.com___L_Ring_Intermediate
+      position: {x: 0.0000016234303, y: 0.0002651971, z: -4.7991336e-13}
+      rotation: {x: -0.0000003733252, y: 0.00017189229, z: -0.0071619344, w: 0.99997437}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Ring_Distal_Tip
+      parentName: characters3d.com___L_Ring_Distal
+      position: {x: -0.0000015407949, y: 0.00018743954, z: 1.0927007e-11}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Middle_Proximal
+      parentName: characters3d.com___L_Hand
+      position: {x: 0.00012719963, y: 0.0015175143, z: -0.00003263663}
+      rotation: {x: -0.0106053455, y: 0.002956667, z: -0.043845024, w: 0.99897766}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Middle_Intermediate
+      parentName: characters3d.com___L_Middle_Proximal
+      position: {x: -0.0000012232014, y: 0.00030166926, z: 6.5291297e-12}
+      rotation: {x: 0.000003120139, y: 0.0005561242, z: 0.009482167, w: 0.9999549}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Middle_Distal
+      parentName: characters3d.com___L_Middle_Intermediate
+      position: {x: 0.0000046987625, y: 0.0003149756, z: 2.40093e-12}
+      rotation: {x: 0.000000024218695, y: 0.00022594468, z: -0.016214235, w: 0.9998685}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Middle_Distal_Tip
+      parentName: characters3d.com___L_Middle_Distal
+      position: {x: -0.0000034755712, y: 0.0001987282, z: -1.555266e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Shoulder
+      parentName: characters3d.com___Upper_Chest
+      position: {x: 0.00061802205, y: 0.0012393703, z: -0.000020183134}
+      rotation: {x: -0.55141145, y: -0.43874395, z: 0.5592474, w: -0.43668246}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Upper_Arm
+      parentName: characters3d.com___R_Shoulder
+      position: {x: -1.3494699e-13, y: 0.0013646081, z: -4.302601e-12}
+      rotation: {x: -0.11728232, y: 0.12971176, z: -0.010115528, w: 0.9845392}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Lower_Arm
+      parentName: characters3d.com___R_Upper_Arm
+      position: {x: -6.238332e-12, y: 0.002572641, z: 1.061212e-11}
+      rotation: {x: 0.00000012602737, y: -0.2156832, z: 0.0000001994231, w: 0.97646344}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Hand
+      parentName: characters3d.com___R_Lower_Arm
+      position: {x: -2.5141852e-11, y: 0.002204201, z: 1.8032959e-11}
+      rotation: {x: 0.00829517, y: 0.14034966, z: -0.052018937, w: 0.9886998}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Thumb_Proximal
+      parentName: characters3d.com___R_Hand
+      position: {x: -0.00030401658, y: 0.00041003793, z: 0.00012815713}
+      rotation: {x: 0.06926906, y: -0.013726181, z: 0.3151839, w: 0.9463998}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Thumb_Intermediate
+      parentName: characters3d.com___R_Thumb_Proximal
+      position: {x: -0.00007010307, y: 0.00041515438, z: 1.0153806e-11}
+      rotation: {x: 0.00027384746, y: -0.0049856463, z: 0.112130895, w: 0.9936809}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Thumb_Distal
+      parentName: characters3d.com___R_Thumb_Intermediate
+      position: {x: 0.000022468743, y: 0.00039062093, z: -3.7337754e-12}
+      rotation: {x: -0.00037566337, y: -0.0034015246, z: 0.052666534, w: 0.9986063}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Thumb_Distal_Tip
+      parentName: characters3d.com___R_Thumb_Distal
+      position: {x: 0.00004763439, y: 0.0002899023, z: -5.105272e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Little_Proximal
+      parentName: characters3d.com___R_Hand
+      position: {x: 0.00038160948, y: 0.001238494, z: -0.000013052184}
+      rotation: {x: -0.014761476, y: -0.015470016, z: 0.0518934, w: 0.9984237}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Little_Intermediate
+      parentName: characters3d.com___R_Little_Proximal
+      position: {x: 0.0000006519917, y: 0.00024558994, z: 7.2133174e-13}
+      rotation: {x: 0.00000044234704, y: -0.00003535877, z: -0.0029093472, w: 0.99999577}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Little_Distal
+      parentName: characters3d.com___R_Little_Intermediate
+      position: {x: -0.00000068899874, y: 0.00021752711, z: -2.0835247e-14}
+      rotation: {x: -0.00000049925796, y: 0.000121691606, z: 0.0017081964, w: 0.99999857}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Little_Distal_Tip
+      parentName: characters3d.com___R_Little_Distal
+      position: {x: 0.00000003700195, y: 0.00016362447, z: -3.458364e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Index_Proximal
+      parentName: characters3d.com___R_Hand
+      position: {x: -0.00038479475, y: 0.0013661176, z: -0.000023378745}
+      rotation: {x: -0.015792727, y: 0.0061945915, z: 0.056434408, w: 0.99826217}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Index_Intermediate
+      parentName: characters3d.com___R_Index_Proximal
+      position: {x: 0.000004350802, y: 0.00035061294, z: 7.481678e-12}
+      rotation: {x: 0.0000002736639, y: 0.000014941688, z: -0.012217597, w: 0.9999254}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Index_Distal
+      parentName: characters3d.com___R_Index_Intermediate
+      position: {x: -0.0000038272956, y: 0.00031836855, z: 1.8688699e-12}
+      rotation: {x: -0.000001484967, y: 0.00022677187, z: 0.0050059156, w: 0.9999875}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Index_Distal_Tip
+      parentName: characters3d.com___R_Index_Distal
+      position: {x: -0.0000005235003, y: 0.00025773255, z: -2.5071317e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Middle_Proximal
+      parentName: characters3d.com___R_Hand
+      position: {x: -0.00014261037, y: 0.0014106499, z: -0.00004397858}
+      rotation: {x: -0.015386141, y: -0.0028640428, z: 0.053553432, w: 0.99844235}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Middle_Intermediate
+      parentName: characters3d.com___R_Middle_Proximal
+      position: {x: 0.0000021919311, y: 0.00034475545, z: 1.3152088e-11}
+      rotation: {x: -0.0000003323474, y: 0.000036115423, z: -0.0056954483, w: 0.9999838}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Middle_Distal
+      parentName: characters3d.com___R_Middle_Intermediate
+      position: {x: -0.0000016979919, y: 0.00033739256, z: -6.1119144e-12}
+      rotation: {x: -0.00000031745913, y: 0.000054935703, z: 0.0016129708, w: 0.9999987}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Middle_Distal_Tip
+      parentName: characters3d.com___R_Middle_Distal
+      position: {x: -0.00000049396596, y: 0.00027031318, z: 7.318805e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Ring_Proximal
+      parentName: characters3d.com___R_Hand
+      position: {x: 0.00014579545, y: 0.0014047329, z: -0.000061467355}
+      rotation: {x: -0.014632721, y: -0.01674473, z: 0.04778991, w: 0.9986099}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Ring_Intermediate
+      parentName: characters3d.com___R_Ring_Proximal
+      position: {x: -0.0000017435666, y: 0.00031026866, z: 1.3545191e-12}
+      rotation: {x: -0.00000071514927, y: 0.00008782161, z: 0.0010514964, w: 0.99999946}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Ring_Distal
+      parentName: characters3d.com___R_Ring_Intermediate
+      position: {x: -0.0000010399506, y: 0.0002967137, z: -3.2223954e-12}
+      rotation: {x: -0.00000432773, y: -0.0007592687, z: 0.008601998, w: 0.99996275}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Ring_Distal_Tip
+      parentName: characters3d.com___R_Ring_Distal
+      position: {x: 0.0000027835176, y: 0.00020292496, z: -5.638556e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Neck
+      parentName: characters3d.com___Upper_Chest
+      position: {x: -0, y: 0.001531583, z: 2.201171e-10}
+      rotation: {x: 0.05226678, y: 3.0690565e-14, z: 2.2929122e-13, w: 0.9986332}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Head
+      parentName: characters3d.com___Neck
+      position: {x: -0, y: 0.0007529342, z: 0.0001171952}
+      rotation: {x: 0, y: 0, z: 2.1158896e-37, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___Head_Tip
+      parentName: characters3d.com___Head
+      position: {x: -0, y: 0.0021524793, z: 0.00033503617}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Upper_Leg
+      parentName: characters3d.com___Hips
+      position: {x: -0.0009255675, y: -0.00056347734, z: 0.000015531505}
+      rotation: {x: 0.00072566705, y: 0.0027238184, z: 0.9999569, w: -0.008846245}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Lower_Leg
+      parentName: characters3d.com___L_Upper_Leg
+      position: {x: 7.2359267e-12, y: 0.0045399363, z: 1.8221845e-12}
+      rotation: {x: -0.040552795, y: 0.0005167305, z: -0.018752128, w: 0.99900126}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Foot
+      parentName: characters3d.com___L_Lower_Leg
+      position: {x: -1.3192115e-11, y: 0.0040356945, z: -1.114446e-11}
+      rotation: {x: 0.4680291, y: -0.06389448, z: -0.0055645537, w: 0.88138264}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Toes
+      parentName: characters3d.com___L_Foot
+      position: {x: -1.1594338e-11, y: 0.0020381676, z: -4.6628194e-11}
+      rotation: {x: 0.34721908, y: 0.04280733, z: -0.01586843, w: 0.93667215}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___L_Toes_Tip
+      parentName: characters3d.com___L_Toes
+      position: {x: -1.2809487e-13, y: 0.0007869492, z: 1.3438503e-12}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Upper_Leg
+      parentName: characters3d.com___Hips
+      position: {x: 0.0009255675, y: -0.00056347734, z: 0.0000072259786}
+      rotation: {x: -0.00087059394, y: 0.0006937062, z: 0.99996024, w: 0.008846037}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Lower_Leg
+      parentName: characters3d.com___R_Upper_Leg
+      position: {x: 5.7765502e-12, y: 0.0045403694, z: -7.07825e-13}
+      rotation: {x: -0.035232518, y: -0.00041250704, z: 0.01875025, w: 0.99920315}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Foot
+      parentName: characters3d.com___R_Lower_Leg
+      position: {x: -1.3717773e-11, y: 0.0040332605, z: -1.0424874e-11}
+      rotation: {x: 0.46522036, y: 0.06407909, z: 0.005645572, w: 0.88285446}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Toes
+      parentName: characters3d.com___R_Foot
+      position: {x: -1.0082215e-11, y: 0.002038739, z: 5.6175186e-11}
+      rotation: {x: 0.34721187, y: -0.042943962, z: 0.015918832, w: 0.9366677}
+      scale: {x: 1, y: 1, z: 1}
+    - name: characters3d.com___R_Toes_Tip
+      parentName: characters3d.com___R_Toes
+      position: {x: -5.7390583e-13, y: 0.000782508, z: 3.8436816e-13}
+      rotation: {x: 0, y: -0, z: -0, w: 1}
+      scale: {x: 1, y: 1, z: 1}
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 0.01
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 1
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 3
+  humanoidOversampling: 1
+  avatarSetup: 1
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
