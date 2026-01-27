@@ -31,9 +31,14 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
     void Awake()
     {
-        if (portero == null) portero = transform;
-        if (animator == null) animator = GetComponentInChildren<Animator>(true);
-        if (modeloHijo == null && animator != null) modeloHijo = animator.transform;
+        if (portero == null)
+            portero = transform;
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
+
+        if (modeloHijo == null && animator != null)
+            modeloHijo = animator.transform;
 
         baseStartLocalPos = portero.localPosition;
         baseStartLocalRot = portero.localRotation;
@@ -43,27 +48,23 @@ public class GoalkeeperAutoReact : MonoBehaviour
             childStartLocalPos = modeloHijo.localPosition;
             childStartLocalRot = modeloHijo.localRotation;
         }
+
+        SetIdle();
     }
 
-    void Start()
-    {
-        // Importante: solo un reset inicial limpio
-        ResetForNewRound();
-    }
-
+    // ✅ Mantenerse quieto
     public void SetIdle()
     {
         if (animator != null)
         {
-            // Deja root motion como lo usabas antes (true)
             animator.applyRootMotion = true;
-
-            // NO Rebind aquí (rompe las animaciones)
             animator.SetInteger(DiveDir, DIR_IDLE);
+            animator.Update(0f);
         }
-
         Debug.Log("[GK] IDLE");
     }
+
+    // ✅ Random entre 2 animaciones (1 y 2)
 
     private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
     {
@@ -87,6 +88,7 @@ public class GoalkeeperAutoReact : MonoBehaviour
         portero.localPosition = destino;
     }
 
+    // ✅ Reset SOLO al empezar nueva ronda
     public void ResetForNewRound()
     {
         StopAllCoroutines();
@@ -94,6 +96,7 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
         portero.localPosition = baseStartLocalPos;
         portero.localRotation = baseStartLocalRot;
+
 
         if (modeloHijo != null)
         {
@@ -104,8 +107,6 @@ public class GoalkeeperAutoReact : MonoBehaviour
         if (animator != null)
         {
             animator.applyRootMotion = true;
-
-            // ✅ Rebind SOLO aquí (reset de ronda)
             animator.Rebind();
             animator.Update(0f);
         }
@@ -114,47 +115,38 @@ public class GoalkeeperAutoReact : MonoBehaviour
         Debug.Log("[GK] ResetForNewRound OK");
     }
 
+    // (Opcional) si ya usas animaciones de resultado:
     public void PlayCelebrate()
     {
         if (animator == null) return;
         keeperReactedThisRound = true;
-
         animator.applyRootMotion = true;
         animator.SetInteger(DiveDir, 4);
-        Debug.Log("[GK] Celebrate");
+        animator.Update(0f);
     }
 
     public void PlayDisappointed()
     {
         if (animator == null) return;
         keeperReactedThisRound = true;
-
         animator.applyRootMotion = true;
         animator.SetInteger(DiveDir, 5);
-        Debug.Log("[GK] Disappointed");
+        animator.Update(0f);
     }
-
+    // 🔥 LLAMADO DESDE GAME MANAGER
     public void TriggerPerRoundAction()
     {
-        if (animator == null)
-        {
-            Debug.LogWarning("[GK] TriggerPerRoundAction() pero animator es NULL");
-            return;
-        }
-
+        // Animación random SOLO cuando se le llama
+        int dive = Random.Range(1, 3); // 1 o 2
         if (keeperReactedThisRound) return;
         keeperReactedThisRound = true;
 
-        int diveValue = Random.Range(1, 4); // 1..3
-        animator.applyRootMotion = true;
-        animator.SetInteger(DiveDir, diveValue);
-
-        Debug.Log($"✅ [GK] TriggerPerRoundAction() -> DiveDirection={diveValue}");
-
-        if (moverBase && (diveValue == DIR_LEFT || diveValue == DIR_RIGHT))
+        if (animator != null)
         {
-            StopAllCoroutines();
-            StartCoroutine(MoverBaseExtra(diveValue));
+            animator.SetInteger("DiveDirection", dive);
+            animator.Update(0f);
         }
+
+        Debug.Log("[GK] Acción por ronda activada");
     }
 }
