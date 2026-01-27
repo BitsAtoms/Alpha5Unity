@@ -2,63 +2,113 @@ import serial
 import time
 import os
 
-PORT = "COM4"
+PORT = "COM3"
 BAUDRATE = 115200
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # PythonScripts
-PARENT_DIR = os.path.dirname(BASE_DIR)  # Sube un nivel
-OUT_FILE = os.path.join(PARENT_DIR, "Config", "keeper_move.txt")
-os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
+# Si NO llega detección válida durante este tiempo, se rearma para permitir otro timestamp
+INACTIVE_TIMEOUT = 0.6  # segundos
 
+DEBUG_PRINT_LINES = True  # ponlo en False si no quieres ver cada mensaje
 
-# Si no llega NADA por el puerto en este tiempo -> escribe 0
-INACTIVE_TIMEOUT = 0.6  # segundos (ajústalo a tu gusto)
+# =========================
+# UTILIDADES (PORTABLE)
+# =========================
+def find_project_root(start_path, project_name="Alpha5Unity"):
+    path = start_path
+    while True:
+        if os.path.basename(path) == project_name:
+            return path
+        new_path = os.path.dirname(path)
+        if new_path == path:
+            raise RuntimeError("No se encontró la carpeta Alpha5Unity")
+        path = new_path
 
+def ts_ms():
+    return int(time.time() * 1000)
 
-def write_value(path: str, value: str) -> None:
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(value)
+def atomic_overwrite(path: str, text: str):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text)
+    os.replace(tmp, path)
 
+def write_keeper_move(path: str):
+    # Ahora el archivo SOLO contiene el timestamp
+    atomic_overwrite(path, f"{ts_ms()}\n")
 
-def read_value(path: str) -> str | None:
-    if not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            v = f.read(1)
-        return v if v in ("0", "1") else None
-    except Exception:
-        return None
+# =========================
+# RUTAS
+# =========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = find_project_root(BASE_DIR, "Alpha5Unity")
+CONFIG_DIR = os.path.join(PROJECT_ROOT, "Config")
+os.makedirs(CONFIG_DIR, exist_ok=True)
 
+KEEPER_MOVE_FILE = os.path.join(CONFIG_DIR, "keeper_move.txt")
 
+# =========================
+# PARSEO / FILTRO
+# =========================
+def is_valid_message(msg: str) -> bool:
+    """
+    Reglas:
+    - Ignorar vacío
+    - Ignorar cualquier mensaje que contenga 'XX' (fuera de rango) en cualquier parte:
+      Ej: 'XX', 'Dz=XX', 'X002B[Dz=XX]', etc.
+    - El resto se considera "detección válida"
+    """
+    if not msg:
+        return False
+
+    up = msg.strip().upper()
+    if not up:
+        return False
+
+    # ✅ CLAVE: si contiene XX en cualquier parte => inválido
+    if "XX" in up:
+        return False
+
+    return True
+
+# =========================
+# MAIN
+# =========================
 def main():
-    last_written = read_value(OUT_FILE)  # para no escribir repetido
-    last_data_time = time.time()
+    print("[PRESENCIA] Config dir:", CONFIG_DIR)
+    print("[PRESENCIA] keeper_move:", KEEPER_MOVE_FILE)
+
+    triggered = False
+    last_valid_time = 0.0
 
     try:
-        ser = serial.Serial(PORT, BAUDRATE, timeout=0.1)
+        ser = serial.Serial(PORT, BAUDRATE, timeout=0.2)
         time.sleep(2)
+        ser.reset_input_buffer()
         print(f"Leyendo de {PORT} @ {BAUDRATE}...")
 
         while True:
-            data = ser.read(ser.in_waiting or 1)
+            raw = ser.readline()  # leemos líneas completas
 
-            now = time.time()
+            if raw:
+                msg = raw.decode("utf-8", errors="ignore").strip()
 
-            # 1) Si llega CUALQUIER DATO -> presencia = 1
-            if data:
-                last_data_time = now
-                if last_written != "1":
-                    write_value(OUT_FILE, "1")
-                    last_written = "1"
-                    print("Dato recibido -> escrito 1")
+                if DEBUG_PRINT_LINES:
+                    print("[SER]", msg)
 
-            # 2) Si NO llega nada durante X segundos -> presencia = 0
-            if INACTIVE_TIMEOUT is not None and (now - last_data_time) >= INACTIVE_TIMEOUT:
-                if last_written != "0":
-                    write_value(OUT_FILE, "0")
-                    last_written = "0"
-                    print("Sin datos -> escrito 0")
+                if is_valid_message(msg):
+                    # ✅ detección válida
+                    last_valid_time = time.time()
+
+                    # ✅ escribir SOLO UNA VEZ por bloque de detección
+                    if not triggered:
+                        write_keeper_move(KEEPER_MOVE_FILE)
+                        triggered = True
+                        print("Detección válida -> escrito TIMESTAMP")
+
+            # ✅ rearme cuando lleva tiempo sin detección válida
+            if triggered and (time.time() - last_valid_time) >= INACTIVE_TIMEOUT:
+                triggered = False
+                print("Rearmado: listo para escribir otro timestamp")
 
             time.sleep(0.01)
 
@@ -72,7 +122,6 @@ def main():
                 ser.close()
         except Exception:
             pass
-
 
 if __name__ == "__main__":
     main()
