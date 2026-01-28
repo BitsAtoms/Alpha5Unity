@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 
@@ -7,7 +9,10 @@ public class GoalResultFlagReaderTimestamp : MonoBehaviour
     public float pollInterval = 0.08f;
 
     string filePath;
-    long lastTimestamp = -1;
+    long lastTimestampMs = -1;
+
+    public event Action<float, float, double> OnGoalSample; 
+    // lat01, h01, tsSeconds
 
     void Awake()
     {
@@ -45,25 +50,25 @@ public class GoalResultFlagReaderTimestamp : MonoBehaviour
         if (string.IsNullOrWhiteSpace(txt)) return;
 
         string[] parts = txt.Split(',', ';');
-        if (parts.Length < 2) return;
+        if (parts.Length < 3) return;
 
-        if (!int.TryParse(parts[0], out int v)) v = 0;
-        if (!long.TryParse(parts[1], out long ts)) return;
+        if (!float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float lat01)) return;
+        if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float h01)) return;
+        if (!long.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out long tsMs)) return;
 
-        if (ts == lastTimestamp) return;
-        lastTimestamp = ts;
+        if (tsMs == lastTimestampMs) return;
+        lastTimestampMs = tsMs;
 
-        File.WriteAllText(filePath, ""); // consumir evento
+        // Consumir evento
+        File.WriteAllText(filePath, "");
 
-        if (v == 1)
-        {
-            Debug.Log($"[GOAL TS] GOL ts={ts}");
-            GameManager.I.GoalScored();
-        }
-        else
-        {
-            Debug.Log($"[GOAL TS] FALLO ts={ts}");
-            GameManager.I.ShotFail();
-        }
+        lat01 = Mathf.Clamp01(lat01);
+        h01 = Mathf.Clamp01(h01);
+
+        double tsSeconds = tsMs / 1000.0;
+
+        Debug.Log($"[GOAL TS] Evento LIDAR lat={lat01:F3} h={h01:F3} tsMs={tsMs}");
+
+        OnGoalSample?.Invoke(lat01, h01, tsSeconds);
     }
 }

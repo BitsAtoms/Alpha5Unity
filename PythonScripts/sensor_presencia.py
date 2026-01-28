@@ -2,7 +2,7 @@ import serial
 import time
 import os
 
-PORT = "COM3"
+PORT = "COM4"
 BAUDRATE = 115200
 
 # Si NO llega detección válida durante este tiempo, se rearma para permitir otro timestamp

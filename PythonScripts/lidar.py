@@ -29,9 +29,18 @@ def atomic_overwrite(path: str, text: str):
         f.write(text)
     os.replace(tmp, path)
 
-def write_result_flag(path: str, value: int):
-    value = 1 if int(value) != 0 else 0
-    atomic_overwrite(path, f"{value},{ts_ms()}\n")
+def clamp01(v: float) -> float:
+    return max(0.0, min(1.0, v))
+
+def normalize_coords(lat_m: float, h_m: float, lat_max_m: float, height_max_m: float):
+    lat01 = clamp01(lat_m / lat_max_m)
+    h01 = clamp01(h_m / height_max_m)
+    return lat01, h01
+
+def write_result_coords(path: str, lat01: float, h01: float):
+    # salida: lat01,h01,timestamp_ms
+    atomic_overwrite(path, f"{lat01:.4f},{h01:.4f},{ts_ms()}\n")
+
 
 # =========================
 # CONFIGURACIÓN
@@ -70,6 +79,7 @@ BASELINE_ALPHA = 0.97
 
 DIAGNOSTIC_MODE = True
 
+
 # =========================
 # GEOMETRÍA / HELPERS
 # =========================
@@ -97,8 +107,9 @@ def polar_to_wall_coords(angle_corr_deg: float, dist_mm: float):
     altura_m = dist_m * math.cos(angle_rad)
     return lateral_m, altura_m
 
+
 # =========================
-# DIAGNÓSTICO (igual que el tuyo)
+# DIAGNÓSTICO
 # =========================
 async def diagnostic_scan(lidar: RPLidar, duration: float = 3.0):
     print("\n" + "="*70)
@@ -120,7 +131,6 @@ async def diagnostic_scan(lidar: RPLidar, duration: float = 3.0):
 
         a = data.get("a_deg")
         d = data.get("d_mm")
-        q = data.get("q", 0)
         if a is None or d is None:
             continue
 
@@ -135,6 +145,7 @@ async def diagnostic_scan(lidar: RPLidar, duration: float = 3.0):
     print(f"Total puntos: {total} | En sector: {sector_points}")
     print("="*70 + "\n")
     return sector_points > 0
+
 
 # =========================
 # LECTURA NORMAL
@@ -181,6 +192,7 @@ async def read_frames_by_revolution(lidar: RPLidar):
         prev_angle = a_corr
         frame.append({"a_corr": a_corr, "d": d, "q": q})
 
+
 async def build_baseline(lidar: RPLidar, seconds: float):
     per_bin = defaultdict(list)
     t_end = time.time() + seconds
@@ -197,6 +209,7 @@ async def build_baseline(lidar: RPLidar, seconds: float):
             baseline[b] = median(ds)
 
     return baseline
+
 
 # =========================
 # MAIN
@@ -229,7 +242,7 @@ async def main():
             last_event_ts = 0.0
             event_count = 0
 
-            print("🎯 Detectando evento (GOL=1)...")
+            print("🎯 Detectando evento (coords lat01,h01,ts_ms)...")
 
             async for frame in read_frames_by_revolution(lidar):
                 candidates = []
@@ -244,23 +257,36 @@ async def main():
                     if diff >= DELTA_MM:
                         lat_m, h_m = polar_to_wall_coords(p["a_corr"], p["d"])
 
-                        # Validación simple
+                        # Validación simple dentro del área 2x2
                         if lat_m < 0 or h_m < 0:
                             continue
                         if lat_m > LAT_MAX_M or h_m > HEIGHT_MAX_M:
                             continue
 
-                        candidates.append(p)
+                        candidates.append({
+                            "d": p["d"],
+                            "lat_m": lat_m,
+                            "h_m": h_m,
+                            "diff": diff,
+                            "a_corr": p["a_corr"]
+                        })
+
+
+                        # baseline adaptativo
                         baseline[b] = BASELINE_ALPHA * baseline[b] + (1 - BASELINE_ALPHA) * p["d"]
 
                 now = time.time()
                 if len(candidates) >= MIN_POINTS_EVENT and (now - last_event_ts) >= EVENT_COOLDOWN_S:
-                    # ✅ Evento detectado: escribimos GOL (1,timestamp)
-                    write_result_flag(GOAL_RESULT_FILE, 1)
+                    # Elegimos el candidato más cercano (menor distancia)
+                    best = max(candidates, key=lambda c: (c["diff"], -c["d"]))
+                    lat01, h01 = normalize_coords(best["lat_m"], best["h_m"], LAT_MAX_M, HEIGHT_MAX_M)
+
+                    write_result_coords(GOAL_RESULT_FILE, lat01, h01)
 
                     last_event_ts = now
                     event_count += 1
-                    print(f"⚽ EVENTO #{event_count} -> escrito: 1,timestamp en goal_result.txt")
+                    print(f"⚽ EVENTO #{event_count} -> escrito: {lat01:.4f},{h01:.4f},{ts_ms()}")
+                    print(f"[BEST] angle={best['a_corr']:.1f}° lat_m={best['lat_m']:.2f} h_m={best['h_m']:.2f} diff={best['diff']:.0f} d={best['d']:.0f}")
 
     except KeyboardInterrupt:
         print("Deteniendo...")
@@ -268,6 +294,7 @@ async def main():
     finally:
         lidar.reset()
         print("Reset completado.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
