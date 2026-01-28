@@ -8,6 +8,10 @@ public class GameManager : MonoBehaviour
     public static GameManager I;
     public static GameManager Instance => I;
 
+    [Header("FX Overlay (Gol/Fallo)")]
+    public GoalFXOverlayPlayer goalFX;
+
+
     [Header("Config (ScriptableObject)")]
     public GameConfig config; // si es null usa valores por defecto
 
@@ -57,6 +61,12 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
+        if (goalFX == null)
+        goalFX = FindFirstObjectByType<GoalFXOverlayPlayer>(FindObjectsInactive.Include);
+
+        if (goalFX == null)
+        goalFX = FindFirstObjectByType<GoalFXOverlayPlayer>(FindObjectsInactive.Include);
+
 
         // Guardar posición inicial pelota (para reset)
         if (ball != null)
@@ -228,6 +238,7 @@ public class GameManager : MonoBehaviour
     public void GoalScored()
     {
         Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed} | state={state}");
+        StartCoroutine(Co_RestartRoundWithFX(isGoal: true));
 
         // Permitimos gol sólo si la ronda está en juego y Start fue pulsado
         if (!startPressedThisRound) return;
@@ -249,7 +260,8 @@ public class GameManager : MonoBehaviour
         if (keeper != null)
             keeper.PlayDisappointed();
 
-        StartCoroutine(Co_RestartRound("¡GOL!"));
+        StartCoroutine(Co_RestartRoundWithFX(true));
+
     }
 
     public void ShotFail(bool force)
@@ -275,13 +287,71 @@ public class GameManager : MonoBehaviour
         if (keeper != null)
             keeper.PlayCelebrate();
 
-        StartCoroutine(Co_RestartRound("Has fallado"));
+        StartCoroutine(Co_RestartRoundWithFX(false));
+
     }
+
+    IEnumerator Co_RestartRoundWithFX(bool isGoal)
+    {
+        state = GameState.ShowingResult;
+
+        // ya no mostramos texto
+        Set(uiMessage, "");
+        Set(uiScore, "");
+        Set(uiAttempts, "");
+
+        // reproducir la animación correcta
+        if (goalFX == null)
+            goalFX = FindFirstObjectByType<GoalFXOverlayPlayer>(FindObjectsInactive.Include);
+
+        float wait = GetResultDisplayDuration();
+
+        if (goalFX != null)
+        {
+            if (isGoal)
+            {
+                goalFX.PlayGol();
+                wait = goalFX.golDuration;
+            }
+            else
+            {
+                goalFX.PlayFallo();
+                wait = goalFX.falloDuration;
+            }
+        }
+
+        yield return new WaitForSeconds(wait);
+
+        // ----- a partir de aquí es tu lógica normal de final de ronda -----
+        if (attempts >= GetMaxAttempts())
+        {
+            state = GameState.EndGame;
+
+            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{GetMaxAttempts()}");
+            yield return new WaitForSeconds(GetEndGameRestartDelay());
+
+            score = 0;
+            attempts = 0;
+
+            ResetPositions();
+            ShowStartForNewRound();
+            yield break;
+        }
+
+        var prog = FindFirstObjectByType<ProgressiveRoundController>(FindObjectsInactive.Include);
+        if (prog != null)
+            prog.OnNewRound(attempts);
+
+        ResetPositions();
+        ShowStartForNewRound();
+    }
+
 
     // overload para mantener compatibilidad con scripts viejos que llamen ShotFail()
     public void ShotFail()
     {
         ShotFail(force: false);
+        StartCoroutine(Co_RestartRoundWithFX(isGoal: false));
     }
 
     // ============================
