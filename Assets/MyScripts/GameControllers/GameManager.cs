@@ -8,9 +8,26 @@ public class GameManager : MonoBehaviour
     public static GameManager I;
     public static GameManager Instance => I;
 
+    [Header("Delay tras acción del portero")]
+    public float failDelayAfterKeeper = 5f;
+    
+    [Header("Delay portero tras pulso (segundos)")]
+    public float keeperActionDelay = 1f;
+
+    Coroutine keeperActionRoutine;
+
+
+    bool pulseSequenceActive = false;
+    float pulseSequenceTimer = 0f;
+    bool keeperDelayActive = false;
+    float keeperDelayTimer = 0f;
+
     [Header("FX Overlay (Gol/Fallo)")]
     public GoalFXOverlayPlayer goalFX;
 
+    [Header("Audio - Música")]
+    public AudioSource musicSource;
+    public bool playMusicOnlyWhenRoundActive = true;
 
     [Header("Config (ScriptableObject)")]
     public GameConfig config; // si es null usa valores por defecto
@@ -27,7 +44,7 @@ public class GameManager : MonoBehaviour
     public Transform ballStartPoint;
 
     [Header("Regla: si pasan X segundos desde que empieza la ronda y NO hay gol => fallo automático")]
-    public float failAfterSeconds = 4f;
+    public float failAfterSeconds = 5f;
 
     // Estado
     GameState state = GameState.WaitingForBall;
@@ -66,6 +83,9 @@ public class GameManager : MonoBehaviour
 
         if (goalFX == null)
         goalFX = FindFirstObjectByType<GoalFXOverlayPlayer>(FindObjectsInactive.Include);
+
+        if (musicSource == null)
+        musicSource = GameObject.FindFirstObjectByType<AudioSource>(); // Mejor: arrástralo en Inspector
 
 
         // Guardar posición inicial pelota (para reset)
@@ -113,17 +133,55 @@ public class GameManager : MonoBehaviour
             return;
 
         // 1) Fail automático por tiempo desde inicio de ronda
-        roundTimer += Time.deltaTime;
-        if (roundTimer >= failAfterSeconds)
+        if (!keeperActionDoneThisRound && roundTimer >= failAfterSeconds)
         {
             Debug.Log("[GM] Timeout de ronda -> ShotFail(force=true)");
             ShotFail(force: true);
             return;
         }
+        // 2.5) Delay después de que el portero actúe (evita fallo inmediato por shotTimeout)
+        if (keeperDelayActive)
+        {
+            keeperDelayTimer += Time.deltaTime;
+
+            if (keeperDelayTimer >= failDelayAfterKeeper)
+            {
+                keeperDelayActive = false; // ya terminó el delay
+            }
+            else
+            {
+                // Mientras dura el delay, no evaluamos el shotTimeout
+                return;
+            }
+        }
 
         // 2) Timeout de ventana de tiro (si estaba armado)
         if (shotArmed)
         {
+            // ✅ Si acabamos de recibir pulso, NO aplicamos el shotTimeout aún
+            if (pulseSequenceActive)
+            {
+                pulseSequenceTimer += Time.deltaTime;
+
+                // 1) durante el primer segundo: esperamos a que el portero se tire
+                if (pulseSequenceTimer < keeperActionDelay)
+                    return;
+
+                // 2) después de que se tire, esperamos X segundos antes de fallar
+                if (pulseSequenceTimer >= keeperActionDelay + failDelayAfterKeeper)
+                {
+                    Debug.Log("[GM] Secuencia pulso terminada -> ShotFail(force=true)");
+                    pulseSequenceActive = false;
+                    ShotFail(force: true);
+                    return;
+                }
+
+                // mientras estamos en esta ventana (portero ya se tiró pero aún no fallamos),
+                // NO usamos shotTimeout del GameConfig
+                return;
+            }
+
+            // ✅ comportamiento normal (si NO hay secuencia activa)
             shotTimer += Time.deltaTime;
             if (shotTimer >= GetShotTimeout())
             {
@@ -132,6 +190,7 @@ public class GameManager : MonoBehaviour
                 return;
             }
         }
+
 
         // 3) Portero SOLO cuando cambia timestamp (1 acción por ronda)
         if (!keeperActionDoneThisRound)
@@ -152,13 +211,20 @@ public class GameManager : MonoBehaviour
                 {
                     keeperActionDoneThisRound = true;
 
-                    Debug.Log("✅ [GM] PULSO TIMESTAMP -> portero reacciona + armShotWindow()");
+                    Debug.Log("✅ [GM] PULSO TIMESTAMP -> inicia secuencia pulso");
+
                     ArmShotWindow();
 
-                    if (keeper != null)
-                        keeper.TriggerPerRoundAction();
-                    else
-                        Debug.LogWarning("[GM] keeper == null, no puedo animar portero");
+                    // ✅ arrancamos la secuencia temporizada
+                    pulseSequenceActive = true;
+                    pulseSequenceTimer = 0f;
+
+                    // ✅ cancelar coroutine anterior por si acaso
+                    if (keeperActionRoutine != null)
+                        StopCoroutine(keeperActionRoutine);
+
+                    // ✅ portero se tira 1s después
+                    keeperActionRoutine = StartCoroutine(Co_KeeperActionAfterDelay());
                 }
             }
             else
@@ -189,9 +255,15 @@ public class GameManager : MonoBehaviour
         shotArmed = false;
         shotTimer = 0f;
         roundTimer = 0f;
+        pulseSequenceActive = false;
+        pulseSequenceTimer = 0f;
 
         state = GameState.WaitingForBall;
-
+        if (keeperActionRoutine != null)
+        {
+            StopCoroutine(keeperActionRoutine);
+            keeperActionRoutine = null;
+        }
         // Mostrar botón Start + ocultar HUD (lo hace tu StartGameButton.ShowForNewRound)
         if (startButtonUI == null)
             startButtonUI = FindFirstObjectByType<StartGameButton>(FindObjectsInactive.Include);
@@ -239,6 +311,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed} | state={state}");
         StartCoroutine(Co_RestartRoundWithFX(isGoal: true));
+        pulseSequenceActive = false;
 
         // Permitimos gol sólo si la ronda está en juego y Start fue pulsado
         if (!startPressedThisRound) return;
@@ -267,6 +340,7 @@ public class GameManager : MonoBehaviour
     public void ShotFail(bool force)
     {
         Debug.Log($"[GM] ShotFail(force={force}) | shotArmed={shotArmed} | state={state}");
+        pulseSequenceActive = false;
 
         if (!startPressedThisRound) return;
         if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
@@ -490,6 +564,34 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"[GM] Diana alcanzada +{points} puntos");
     }
+
+    IEnumerator Co_FailAfterDelay()
+    {
+        yield return new WaitForSeconds(failDelayAfterKeeper);
+
+        // Seguridad extra: solo fallar si seguimos en estado válido
+        if (state == GameState.ReadyToShoot || state == GameState.ShotInProgress)
+        {
+            Debug.Log("[GM] Delay post-portero terminado -> ShotFail()");
+            ShotFail(force: true);
+        }
+    }
+
+        IEnumerator Co_KeeperActionAfterDelay()
+    {
+        yield return new WaitForSeconds(keeperActionDelay);
+
+        // Seguridad: solo actúa si seguimos en ronda activa
+        if (state == GameState.ReadyToShoot || state == GameState.ShotInProgress)
+        {
+            if (keeper == null)
+                keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
+
+            if (keeper != null)
+                keeper.TriggerPerRoundAction();
+        }
+    }
+
 
     // ============================
     // Config getters (no rompe si config es null)

@@ -45,7 +45,7 @@ def write_result_coords(path: str, lat01: float, h01: float):
 # =========================
 # CONFIGURACIÓN
 # =========================
-PORT = "COM3"
+PORT = "COM4"
 BAUDRATE = 460800
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -3,21 +3,22 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuController : MonoBehaviour
 {
-    [Header("Escena del juego (Build Index o nombre)")]
-    public int gameSceneBuildIndex = 1;
+    [Header("Nombres de escenas")]
+    public string sceneAdulto = "ProyectoFinalAdulto";
+    public string sceneNino = "ProyectoFinalNiño";
 
     public void PlayNormal()
     {
         EnsureSettings();
         GameSettings.I.SetMode(GameMode.Normal);
-        SceneManager.LoadScene(gameSceneBuildIndex);
+        SceneManager.LoadScene(sceneAdulto);
     }
 
     public void PlayNino()
     {
         EnsureSettings();
         GameSettings.I.SetMode(GameMode.Nino);
-        SceneManager.LoadScene(gameSceneBuildIndex);
+        SceneManager.LoadScene(sceneNino);
     }
 
     void EnsureSettings()
