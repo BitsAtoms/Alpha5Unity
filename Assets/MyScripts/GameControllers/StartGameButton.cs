@@ -17,50 +17,17 @@ public class StartGameButton : MonoBehaviour
     }
 
     IEnumerator Co_StartGame()
-    {
-        // 1) HUD ON
-        if (hudRoot != null)
-        {
-            hudRoot.SetActive(true);
-            Debug.Log("✅ [UI] hudRoot activado");
-        }
+{
+    if (hudRoot) hudRoot.SetActive(true);
 
-        // 2) Reader ON + prime (sin pulso inicial)
-        if (keeperFlagReaderObject != null)
-        {
-            keeperFlagReaderObject.SetActive(true);
-            Debug.Log("✅ [UI] keeperFlagReaderObject activado");
+    if (keeperFlagReaderObject) keeperFlagReaderObject.SetActive(true);
 
-            yield return null; // 1 frame para que Awake/OnEnable corran
+    if (startButtonObject) startButtonObject.SetActive(false);
 
-            var reader = keeperFlagReaderObject.GetComponent<KeeperMoveFlagReaderTimestamp>();
-            if (reader != null)
-            {
-                reader.PrimeFromFile();
-                reader.ClearPulse();
-                Debug.Log("✅ [UI] Reader primado (sin pulso) y pulso limpiado");
-            }
-            else Debug.LogWarning("⚠️ [UI] KeeperMoveFlagReaderTimestamp NO está en keeperFlagReaderObject");
-        }
-        else Debug.LogWarning("⚠️ [UI] keeperFlagReaderObject NO asignado");
+    yield return null;
 
-        // 3) Botón OFF
-        if (startButtonObject != null)
-        {
-            startButtonObject.SetActive(false);
-            Debug.Log("✅ [UI] startButtonObject ocultado");
-        }
-
-        yield return null;
-
-        // 4) Avisar GameManager
-        if (GameManager.I != null)
-        {
-            GameManager.I.BeginGame();
-            Debug.Log("✅ [UI] GameManager.BeginGame() llamado");
-        }
-        else Debug.LogWarning("⚠️ [UI] GameManager.I es NULL");
-    }
+    if (GameManager.I != null) GameManager.I.BeginGame();
+}
 
     // ✅ Llamar desde GameManager al iniciar cada ronda
     public void ShowForNewRound()
