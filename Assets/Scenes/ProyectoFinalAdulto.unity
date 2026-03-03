@@ -1466,7 +1466,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4278255367
   m_fontColor: {r: 0.02561307, g: 1, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -3918,7 +3918,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea00e46c6080834e90345321c4acf4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  failDelayAfterKeeper: 5
+  keeperActionDelay: 1
   goalFX: {fileID: 1779806294}
+  musicSource: {fileID: 0}
+  playMusicOnlyWhenRoundActive: 1
   config: {fileID: 11400000, guid: 3e73df9136a56b543869fa60f1fcbd53, type: 2}
   uiMessage: {fileID: 994646875}
   uiScore: {fileID: 481406071}
@@ -7920,7 +7924,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 339107952}
-  - component: {fileID: 339107951}
   - component: {fileID: 339107953}
   m_Layer: 0
   m_Name: Lidar
@@ -7929,21 +7932,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &339107951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339107950}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04a9e6b280a1c11468c6dd875c2c17bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RplidarSmokeTest
-  comPort: COM3
-  baudrate: 460800
-  logEverySeconds: 1
 --- !u!4 &339107952
 Transform:
   m_ObjectHideFlags: 0
@@ -13742,7 +13730,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4280038129
   m_fontColor: {r: 0.9433962, g: 0.19756268, b: 0.10976606, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -39585,6 +39573,7 @@ GameObject:
   - component: {fileID: 1779806292}
   - component: {fileID: 1779806291}
   - component: {fileID: 1779806294}
+  - component: {fileID: 1779806295}
   m_Layer: 5
   m_Name: GoalFXOverlay
   m_TagString: Untagged
@@ -39680,6 +39669,110 @@ MonoBehaviour:
   falloState: Fallo
   golDuration: 5
   falloDuration: 5
+  sfxSource: {fileID: 1779806295}
+  golClip: {fileID: 8300000, guid: c9256a3fdd889c3418a65d3cc20a626a, type: 3}
+  falloClip: {fileID: 8300000, guid: 796009ad9b91e9043943cdec7287ad07, type: 3}
+  musicSource: {fileID: 1779806295}
+  musicNormalVolume: 0.4
+  musicDuckedVolume: 0.12
+  duckFadeTime: 0.15
+--- !u!82 &1779806295
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1779806289}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 620dee0d129fb09428f756764c612a9e, type: 3}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &1781450648
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -44087,6 +44180,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b9a305e18de0c04dbd257a21cd47087, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sharedProfile: {fileID: 0}
+  isGlobal: 0
+  blendDistance: 0
+  weight: 1
+  priority: 0
 --- !u!65 &2017729508
 BoxCollider:
   m_ObjectHideFlags: 0

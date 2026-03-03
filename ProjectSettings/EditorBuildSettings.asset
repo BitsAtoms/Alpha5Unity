@@ -29,5 +29,8 @@ EditorBuildSettings:
   - enabled: 1
     path: "Assets/Scenes/ProyectoFinalNi\xF1o.unity"
     guid: b922cb62fc86d314289a4a8324b52218
+  - enabled: 1
+    path: Assets/Scenes/EscenaEspera.unity
+    guid: 814e33ddb6460ee45a9de0ac1e7f0398
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
