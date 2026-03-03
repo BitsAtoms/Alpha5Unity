@@ -40,7 +40,7 @@ public class ReadmeEditor : Editor
             }
 
             var readmeAsset = SelectReadme();
-            if (readmeAsset != null)
+            if (readmeAsset)
             {
                 var path = AssetDatabase.GetAssetPath(readmeAsset);
                 FileUtil.DeleteFileOrDirectory(path + ".meta");
@@ -101,7 +101,7 @@ public class ReadmeEditor : Editor
 
         GUILayout.BeginHorizontal("In BigTitle");
         {
-            if (readme.icon != null)
+            if (readme.icon)
             {
                 GUILayout.Space(k_Space);
                 GUILayout.Label(readme.icon, GUILayout.Width(iconWidth), GUILayout.Height(iconWidth));

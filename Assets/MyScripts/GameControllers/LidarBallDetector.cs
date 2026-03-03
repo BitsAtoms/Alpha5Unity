@@ -5,7 +5,7 @@ using UnityEngine;
 public class LidarBallDetector : MonoBehaviour
 {
     [Header("Configuración RPLIDAR")]
-    public string comPort = "COM3";
+    public string comPort = "COM8";
     public int baudrate = 460800;
 
     [Header("Área de Detección (Metros)")]

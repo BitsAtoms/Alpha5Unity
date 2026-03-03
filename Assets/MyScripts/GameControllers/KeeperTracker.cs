@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class KeeperTracker : MonoBehaviour
 {
-    [Header("What to track (usually the base/root goalkeeper Transform)")]
-    public Transform target; // <- arrastra aquí el 'portero' (base) del GoalkeeperAutoReact
-
-    [Header("Goal area reference (2x2 equivalent)")]
+    [Header("Referencias")]
+    public Transform target; 
     public Transform goalBottomLeft;
     public Transform goalTopRight;
 
@@ -15,89 +12,73 @@ public class KeeperTracker : MonoBehaviour
     public float sampleHz = 60f;
     public float keepHistorySeconds = 2.0f;
 
-    public struct Sample
-    {
-        public double ts;   // epoch seconds
-        public float lat01; // 0..1 (lateral) => Z
-        public float h01;   // 0..1 (height)  => Y
+    public struct Sample {
+        public double ts;  
+        public float lat01; 
+        public float h01;   
     }
 
-    private readonly List<Sample> _samples = new List<Sample>(512);
+    // Buffer circular para evitar Garbage Collection y bloqueos de memoria
+    private Sample[] _samples = new Sample[256]; 
+    private int _head = 0;
+    private int _tail = 0;
+    private int _count = 0;
     private float _accum;
 
-    void Awake()
-    {
-        if (target == null) target = transform; // fallback
+    void Awake() {
+        if (target == null) target = transform; 
     }
 
-    void Update()
-    {
+    void Update() {
         if (target == null || goalBottomLeft == null || goalTopRight == null) return;
 
         _accum += Time.unscaledDeltaTime;
         float interval = 1f / Mathf.Max(1f, sampleHz);
 
-        while (_accum >= interval)
-        {
+        while (_accum >= interval) {
             _accum -= interval;
             AddSample();
             PruneOld();
         }
     }
 
-    void AddSample()
-    {
-        // ✅ lee SIEMPRE del target (base del portero)
-        Vector3 p = target.position;
-
-        float lateralZ = p.z;
-        float heightY = p.y;
-
-        float leftZ = goalBottomLeft.position.z;
-        float rightZ = goalTopRight.position.z;
-
-        float bottomY = goalBottomLeft.position.y;
-        float topY = goalTopRight.position.y;
-
-        float lat01 = Mathf.InverseLerp(leftZ, rightZ, lateralZ);
-        float h01 = Mathf.InverseLerp(bottomY, topY, heightY);
-
-        lat01 = Mathf.Clamp01(lat01);
-        h01 = Mathf.Clamp01(h01);
+    void AddSample() {
+        float lat01 = Mathf.InverseLerp(goalBottomLeft.position.z, goalTopRight.position.z, target.position.z);
+        float h01 = Mathf.InverseLerp(goalBottomLeft.position.y, goalTopRight.position.y, target.position.y);
 
         double ts = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-        _samples.Add(new Sample { ts = ts, lat01 = lat01, h01 = h01 });
+        
+        // Escribir en la cabeza del buffer circular (O(1))
+        _samples[_head] = new Sample { ts = ts, lat01 = Mathf.Clamp01(lat01), h01 = Mathf.Clamp01(h01) };
+        _head = (_head + 1) % _samples.Length;
+
+        if (_count < _samples.Length) _count++;
+        else _tail = (_tail + 1) % _samples.Length; // Sobrescribir el más viejo
     }
 
-    void PruneOld()
-    {
-        double now = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-        double minTs = now - keepHistorySeconds;
+    void PruneOld() {
+        double minTs = (DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds - keepHistorySeconds;
 
-        int removeCount = 0;
-        for (int i = 0; i < _samples.Count; i++)
-        {
-            if (_samples[i].ts < minTs) removeCount++;
-            else break;
+        // Mover la cola en lugar de borrar datos de una lista (O(1) sin mover memoria)
+        while (_count > 0 && _samples[_tail].ts < minTs) {
+            _tail = (_tail + 1) % _samples.Length;
+            _count--;
         }
-        if (removeCount > 0) _samples.RemoveRange(0, removeCount);
     }
 
-    public bool TryGetNearest(double ts, out Sample nearest)
-    {
+    public bool TryGetNearest(double ts, out Sample nearest) {
         nearest = default;
-        if (_samples.Count == 0) return false;
+        if (_count == 0) return false;
 
         double bestDt = double.MaxValue;
         int bestIndex = -1;
 
-        for (int i = 0; i < _samples.Count; i++)
-        {
-            double d = Math.Abs(_samples[i].ts - ts);
-            if (d < bestDt)
-            {
+        for (int i = 0; i < _count; i++) {
+            int idx = (_tail + i) % _samples.Length;
+            double d = Math.Abs(_samples[idx].ts - ts);
+            if (d < bestDt) {
                 bestDt = d;
-                bestIndex = i;
+                bestIndex = idx;
             }
         }
 

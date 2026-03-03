@@ -1051,82 +1051,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &339107950
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 339107952}
-  - component: {fileID: 339107951}
-  - component: {fileID: 339107953}
-  m_Layer: 0
-  m_Name: Lidar
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &339107951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339107950}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04a9e6b280a1c11468c6dd875c2c17bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RplidarSmokeTest
---- !u!4 &339107952
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339107950}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1859.0872, y: 1.4181, z: 1820.6858}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &339107953
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 339107950}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 507b7215eabf5734fb0266d23c9ae08b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RplidarEventDetectorToFile
-  comPort: COM3
-  baudrate: 460800
-  fileName: goal_result.txt
-  latMaxM: 2
-  heightMaxM: 2
-  angleOffsetDeg: 270
-  angleMin: 0
-  angleMax: 90
-  minDistMm: 30
-  maxDistMm: 8000
-  minQuality: 0
-  baselineSeconds: 2
-  angleBinDeg: 2
-  deltaMm: 150
-  minPointsEvent: 3
-  eventCooldownS: 0.3
-  baselineAlpha: 0.97
-  logBaselineReady: 1
-  logEvents: 1
 --- !u!1001 &391357468
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1903,7 +1827,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StartGameButton
   hudRoot: {fileID: 1109007943}
   startButtonObject: {fileID: 618536854}
-  keeperFlagReaderObject: {fileID: 677465100}
+  keeperFlagReaderObject: {fileID: 0}
 --- !u!4 &615905275
 Transform:
   m_ObjectHideFlags: 0
@@ -2159,52 +2083,6 @@ Transform:
   - {fileID: 26908682}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!1 &677465100
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 677465101}
-  - component: {fileID: 677465102}
-  m_Layer: 0
-  m_Name: KeeperFlagReader
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &677465101
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 677465100}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1996.8516, y: 0, z: 8692.958}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &677465102
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 677465100}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a35b45c49e3043c4ca2a339f55efe0be, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::KeeperMoveFlagReaderTimestamp
-  fileName: keeper_move.txt
-  pollInterval: 0.08
 --- !u!1 &696361127
 GameObject:
   m_ObjectHideFlags: 0
@@ -2609,10 +2487,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 812974550}
-  - component: {fileID: 812974551}
   - component: {fileID: 812974552}
   m_Layer: 0
-  m_Name: GoalResultReader
+  m_Name: GoalResult
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2633,20 +2510,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &812974551
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812974548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9111622433e0af4ab8989d149739071, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GoalResultFlagReaderTimestamp
-  fileName: goal_result.txt
-  pollInterval: 0.08
 --- !u!114 &812974552
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2660,7 +2523,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LidarKeeperMatcher
   keeperTracker: {fileID: 1232071311}
-  goalReader: {fileID: 812974551}
+  lidarDetector: {fileID: 0}
   maxTimeDiffSeconds: 0.12
   goalDistanceThreshold: 0.25
   use2DDistance: 1
@@ -4041,54 +3904,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
---- !u!1 &1445836482
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1445836484}
-  - component: {fileID: 1445836485}
-  m_Layer: 0
-  m_Name: Presence
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1445836484
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1445836482}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1854.76, y: 3.2899, z: 1821.9835}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1445836485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1445836482}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03cf02c2d02e4d6408acc69f0ae011ae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SerialPresenceReader
-  portName: COM4
-  baudRate: 115200
-  inactiveTimeout: 0.6
-  presenceFileName: keeper_move.txt
 --- !u!1 &1451247750
 GameObject:
   m_ObjectHideFlags: 0
@@ -4493,6 +4308,52 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1665491129}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1753340331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1753340333}
+  - component: {fileID: 1753340332}
+  m_Layer: 0
+  m_Name: HardwareBridge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1753340332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf58886585331164f9279d4733990db7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SerialAutoDetector
+  baudRate: 115200
+  inactiveTimeout: 0.6
+--- !u!4 &1753340333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1848.574, y: 1.53085, z: 1816.0701}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1779806289
 GameObject:
   m_ObjectHideFlags: 0
@@ -5053,10 +4914,8 @@ SceneRoots:
   - {fileID: 50499036}
   - {fileID: 708931474}
   - {fileID: 615905275}
-  - {fileID: 677465101}
   - {fileID: 812974550}
   - {fileID: 1870908623}
   - {fileID: 84446125}
-  - {fileID: 339107952}
-  - {fileID: 1445836484}
   - {fileID: 311824247}
+  - {fileID: 1753340333}

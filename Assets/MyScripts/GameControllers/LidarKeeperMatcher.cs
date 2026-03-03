@@ -5,82 +5,44 @@ public class LidarKeeperMatcher : MonoBehaviour
 {
     [Header("Referencias")]
     public KeeperTracker keeperTracker;
-    
-    // ✅ Cambiamos la referencia al nuevo detector que procesa la nube de puntos
-    // Si aún no lo has creado, este sería el script que usa RplidarNative
-    public LidarBallDetector lidarDetector; 
+    public LidarEventDetector lidarDetector; 
 
     [Header("Tolerance")]
     public double maxTimeDiffSeconds = 0.12;
-
-    [Header("Decision")]
-    [Tooltip("Si la distancia es MAYOR o IGUAL que este valor => GOL")]
     public float goalDistanceThreshold = 0.25f;
-
-    [Tooltip("Si TRUE, usa distancia 2D (lat+h). Si FALSE, usa solo lateral (lat).")]
     public bool use2DDistance = true;
 
-    // ✅ Suscripción al evento de detección
-    void OnEnable()
-    {
-        if (lidarDetector != null)
-            lidarDetector.OnGoalDetected += OnGoalSample;
+    void OnEnable() {
+        if (lidarDetector) lidarDetector.OnGoalDetected += OnGoalSample;
     }
 
-    void OnDisable()
-    {
-        if (lidarDetector != null)
-            lidarDetector.OnGoalDetected -= OnGoalSample;
+    void OnDisable() {
+        if (lidarDetector) lidarDetector.OnGoalDetected -= OnGoalSample;
     }
 
-    void OnGoalSample(float lat01, float h01, double tsSeconds)
-    {
+    void OnGoalSample(float lat01, float h01, double tsSeconds) {
         if (GameManager.I == null) return;
 
-        if (keeperTracker == null)
-        {
-            Debug.LogWarning("[MATCH] keeperTracker NULL -> marco GOL por defecto");
-            GameManager.I.GoalScored();
-            return;
+        // ✅ LA CLAVE: Si el juego no está listo para un tiro, ignoramos el LiDAR por completo
+        if (!GameManager.I.CanShoot()) {
+            return; // No hace nada durante reinicios o pausas
         }
 
-        // Obtener la posición del portero en el momento exacto del impacto
-        if (!keeperTracker.TryGetNearest(tsSeconds, out var k))
-        {
-            Debug.LogWarning("[MATCH] No hay muestras del portero -> marco GOL por defecto");
+        if (keeperTracker == null || !keeperTracker.TryGetNearest(tsSeconds, out var k)) {
             GameManager.I.GoalScored();
             return;
         }
 
         double dt = Math.Abs(k.ts - tsSeconds);
-        if (dt > maxTimeDiffSeconds)
-        {
-            Debug.LogWarning($"[MATCH] Timestamp fuera de tolerancia dt={dt*1000:F0}ms -> ignoro evento");
-            return; 
-        }
+        if (dt > maxTimeDiffSeconds) return; 
 
-        float dist;
-        if (use2DDistance)
-        {
-            float dx = k.lat01 - lat01;
-            float dy = k.h01 - h01;
-            dist = Mathf.Sqrt(dx * dx + dy * dy);
-        }
-        else
-        {
-            dist = Mathf.Abs(k.lat01 - lat01);
-        }
+        float dist = use2DDistance 
+            ? Mathf.Sqrt(Mathf.Pow(k.lat01 - lat01, 2) + Mathf.Pow(k.h01 - h01, 2)) 
+            : Mathf.Abs(k.lat01 - lat01);
 
-        Debug.Log($"[MATCH] LIDAR({lat01:F3},{h01:F3}) KEEPER({k.lat01:F3},{k.h01:F3}) dist={dist:F3}");
+        Debug.Log($"[MATCH] Distancia Impacto-Portero: {dist:F3}");
 
-        // Regla: GOL si la distancia es lo suficientemente grande (el portero no llegó)
-        if (dist >= goalDistanceThreshold)
-        {
-            GameManager.I.GoalScored();
-        }
-        else
-        {
-            GameManager.I.ShotFail();
-        }
+        if (dist >= goalDistanceThreshold) GameManager.I.GoalScored();
+        else GameManager.I.ShotFail();
     }
 }

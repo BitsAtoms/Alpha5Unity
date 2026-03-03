@@ -26,11 +26,11 @@ public class TargetScore : MonoBehaviour
         if (!other.CompareTag("Ball")) return;
 
         // ✅ Evitar sumar puntos fuera del momento de tiro
-        if (GameManager.I != null && !GameManager.I.CanShoot())
+        if (GameManager.I  && !GameManager.I.CanShoot())
             return;
 
         // ✅ Anti-bug: comprobar que la pelota está realmente cerca del centro de esta diana
-        Vector3 closest = myCol != null ? myCol.ClosestPoint(other.transform.position) : transform.position;
+        Vector3 closest = myCol  ? myCol.ClosestPoint(other.transform.position) : transform.position;
         float d = Vector3.Distance(closest, other.transform.position);
 
         if (d > maxHitDistance)
@@ -43,7 +43,7 @@ public class TargetScore : MonoBehaviour
 
         Debug.Log($"[TargetScore] HIT REAL -> {name} +{points}");
 
-        if (GameManager.I != null)
+        if (GameManager.I)
             GameManager.I.AddTargetScore(points);
     }
 

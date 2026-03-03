@@ -3,10 +3,10 @@ using UnityEngine;
 public class GoalkeeperAutoReact : MonoBehaviour
 {
     [Header("Referencias")]
-    public Transform portero;          // base (padre/root)
+    public Transform portero;          
 
     [Header("Modelo animado (HIJO)")]
-    public Transform modeloHijo;       // hijo con Animator
+    public Transform modeloHijo;       
     public Animator animator;
 
     private static readonly int DiveDir = Animator.StringToHash("DiveDirection");
@@ -16,7 +16,6 @@ public class GoalkeeperAutoReact : MonoBehaviour
     public float moveDistance = 1.5f;
     public float moveSpeed = 5f;
 
-    // ✅ SOLO 1 ACCIÓN POR RONDA
     private bool keeperReactedThisRound = false;
 
     private const int DIR_IDLE  = 0;
@@ -31,20 +30,14 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
     void Awake()
     {
-        if (portero == null)
-            portero = transform;
-
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
-
-        if (modeloHijo == null && animator != null)
-            modeloHijo = animator.transform;
+        if (portero == null) portero = transform;
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (modeloHijo == null && animator) modeloHijo = animator.transform;
 
         baseStartLocalPos = portero.localPosition;
         baseStartLocalRot = portero.localRotation;
 
-        if (modeloHijo != null)
-        {
+        if (modeloHijo) {
             childStartLocalPos = modeloHijo.localPosition;
             childStartLocalRot = modeloHijo.localRotation;
         }
@@ -52,43 +45,15 @@ public class GoalkeeperAutoReact : MonoBehaviour
         SetIdle();
     }
 
-    // ✅ Mantenerse quieto
     public void SetIdle()
     {
-        if (animator != null)
-        {
+        if (animator) {
             animator.applyRootMotion = true;
             animator.SetInteger(DiveDir, DIR_IDLE);
-            animator.Update(0f);
+            // Eliminado el Update(0f) para evitar tirones
         }
-        Debug.Log("[GK] IDLE");
     }
 
-    // ✅ Random entre 2 animaciones (1 y 2)
-
-    private System.Collections.IEnumerator MoverBaseExtra(int diveValue)
-    {
-        Vector3 destino = baseStartLocalPos;
-
-        if (diveValue == DIR_LEFT)
-            destino += Vector3.back * moveDistance;
-        else if (diveValue == DIR_RIGHT)
-            destino += Vector3.forward * moveDistance;
-
-        Vector3 inicio = portero.localPosition;
-
-        float t = 0f;
-        while (t < 1f)
-        {
-            t += Time.deltaTime * moveSpeed;
-            portero.localPosition = Vector3.Lerp(inicio, destino, t);
-            yield return null;
-        }
-
-        portero.localPosition = destino;
-    }
-
-    // ✅ Reset SOLO al empezar nueva ronda
     public void ResetForNewRound()
     {
         StopAllCoroutines();
@@ -97,32 +62,26 @@ public class GoalkeeperAutoReact : MonoBehaviour
         portero.localPosition = baseStartLocalPos;
         portero.localRotation = baseStartLocalRot;
 
-
-        if (modeloHijo != null)
-        {
+        if (modeloHijo) {
             modeloHijo.localPosition = childStartLocalPos;
             modeloHijo.localRotation = childStartLocalRot;
         }
 
-        if (animator != null)
-        {
+        if (animator) {
             animator.applyRootMotion = true;
             animator.Rebind();
-            animator.Update(0f);
+            animator.Update(0f); // Aquí SÍ está bien forzarlo porque es un reinicio estático
         }
 
         SetIdle();
-        Debug.Log("[GK] ResetForNewRound OK");
     }
 
-    // (Opcional) si ya usas animaciones de resultado:
     public void PlayCelebrate()
     {
         if (animator == null) return;
         keeperReactedThisRound = true;
         animator.applyRootMotion = true;
         animator.SetInteger(DiveDir, 4);
-        animator.Update(0f);
     }
 
     public void PlayDisappointed()
@@ -131,22 +90,17 @@ public class GoalkeeperAutoReact : MonoBehaviour
         keeperReactedThisRound = true;
         animator.applyRootMotion = true;
         animator.SetInteger(DiveDir, 5);
-        animator.Update(0f);
     }
-    // 🔥 LLAMADO DESDE GAME MANAGER
+
     public void TriggerPerRoundAction()
     {
-        // Animación random SOLO cuando se le llama
-        int dive = Random.Range(1, 3); // 1 o 2
+        int dive = Random.Range(1, 3); 
         if (keeperReactedThisRound) return;
         keeperReactedThisRound = true;
 
-        if (animator != null)
-        {
-            animator.SetInteger("DiveDirection", dive);
-            animator.Update(0f);
+        if (animator) {
+            animator.SetInteger(DiveDir, dive);
+            // Eliminado el Update(0f) para que el salto se mezcle de forma suave
         }
-
-        Debug.Log("[GK] Acción por ronda activada");
     }
 }

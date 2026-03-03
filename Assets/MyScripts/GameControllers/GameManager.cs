@@ -19,8 +19,6 @@ public class GameManager : MonoBehaviour
 
     bool pulseSequenceActive = false;
     float pulseSequenceTimer = 0f;
-    bool keeperDelayActive = false;
-    float keeperDelayTimer = 0f;
 
     [Header("FX Overlay (Gol/Fallo)")]
     public GoalFXOverlayPlayer goalFX;
@@ -65,7 +63,7 @@ public class GameManager : MonoBehaviour
     float roundTimer = 0f;
 
     // Cache refs (evita Find cada frame)
-    SerialAutoDetector sensorDetector;
+    SerialSensorEvent sensorDetector;
     GoalkeeperAutoReact keeper;
     StartGameButton startButtonUI;
 
@@ -73,32 +71,25 @@ public class GameManager : MonoBehaviour
     Quaternion ballStartRot;
 
     void OnEnable() 
-{ 
-    I = this; 
-    // Suscribirse al evento del sensor automático
-    sensorDetector = FindFirstObjectByType<SerialAutoDetector>();
-    if (sensorDetector)
-        sensorDetector.OnSensorTriggered += OnPhysicalSensorHit;
-}
+    { 
+        I = this; 
+        sensorDetector = FindFirstObjectByType<SerialSensorEvent>();
+        if (sensorDetector) sensorDetector.OnSensorTriggered += OnPhysicalSensorHit;
+    }
 
-void OnDisable() 
-{ 
-    if (I == this) I = null; 
-    // Desuscribirse para evitar errores de memoria
-    if (sensorDetector)
-        sensorDetector.OnSensorTriggered -= OnPhysicalSensorHit;
-}
+    void OnDisable() 
+    { 
+        if (I == this) I = null; 
+        if (sensorDetector) sensorDetector.OnSensorTriggered -= OnPhysicalSensorHit;
+    }
 
     void Awake()
     {
         if (!ball) ball = FindFirstObjectByType<BallController>();
-        if (goalFX == null)
+        if (!goalFX)
         goalFX = FindFirstObjectByType<GoalFXOverlayPlayer>(FindObjectsInactive.Include);
 
-        if (goalFX == null)
-        goalFX = FindFirstObjectByType<GoalFXOverlayPlayer>(FindObjectsInactive.Include);
-
-        if (musicSource == null)
+        if (!musicSource)
         musicSource = GameObject.FindFirstObjectByType<AudioSource>(); // Mejor: arrástralo en Inspector
 
 
@@ -170,20 +161,6 @@ void OnDisable()
             return;
         }
         // 2.5) Delay después de que el portero actúe (evita fallo inmediato por shotTimeout)
-        if (keeperDelayActive)
-        {
-            keeperDelayTimer += Time.deltaTime;
-
-            if (keeperDelayTimer >= failDelayAfterKeeper)
-            {
-                keeperDelayActive = false; // ya terminó el delay
-            }
-            else
-            {
-                // Mientras dura el delay, no evaluamos el shotTimeout
-                return;
-            }
-        }
 
         // 2) Timeout de ventana de tiro (si estaba armado)
         if (shotArmed)
@@ -221,54 +198,6 @@ void OnDisable()
             }
         }
 
-
-       /* // 3) Portero SOLO cuando cambia timestamp (1 acción por ronda)
-        if (!keeperActionDoneThisRound)
-        {
-            if (keeperReader == null)
-                keeperReader = FindFirstObjectByType<KeeperMoveFlagReaderTimestamp>(FindObjectsInactive.Include);
-
-            if (keeper == null)
-                keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
-
-            if (keeperReader != null)
-            {
-                // lee el archivo y si cambió -> pulse=true (lo verás en consola por el reader)
-                keeperReader.ForceReadNow();
-
-                // consume el pulso SOLO una vez
-                if (keeperReader.ConsumePulse())
-                {
-                    keeperActionDoneThisRound = true;
-
-                    Debug.Log("✅ [GM] PULSO TIMESTAMP -> inicia secuencia pulso");
-
-                    ArmShotWindow();
-
-                    // ✅ arrancamos la secuencia temporizada
-                    pulseSequenceActive = true;
-                    pulseSequenceTimer = 0f;
-
-                    // ✅ cancelar coroutine anterior por si acaso
-                    if (keeperActionRoutine != null)
-                        StopCoroutine(keeperActionRoutine);
-
-                    // ✅ portero se tira 1s después
-                    keeperActionRoutine = StartCoroutine(Co_KeeperActionAfterDelay());
-                }
-            }
-            else
-            {
-                // Si no hay reader, no habrá portero por timestamp
-                // (lo dejamos en silencio para no spamear)
-            }
-        }*/
-
-        // Solo para pruebas
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            Debug.Log("[DEBUG] Simulando sensor con Espacio");
-            OnPhysicalSensorHit(); 
-        }
     }
 
     // ============================
@@ -301,10 +230,10 @@ void OnDisable()
             keeperActionRoutine = null;
         }
         // Mostrar botón Start + ocultar HUD (lo hace tu StartGameButton.ShowForNewRound)
-        if (startButtonUI == null)
+        if (!startButtonUI)
             startButtonUI = FindFirstObjectByType<StartGameButton>(FindObjectsInactive.Include);
 
-        if (startButtonUI != null)
+        if (startButtonUI)
             startButtonUI.ShowForNewRound();
 
         Debug.Log("[GM] Esperando START...");
@@ -346,31 +275,29 @@ void OnDisable()
     public void GoalScored()
     {
         Debug.Log($"[GM] GoalScored() | shotArmed={shotArmed} | state={state}");
-        StartCoroutine(Co_RestartRoundWithFX(isGoal: true));
         pulseSequenceActive = false;
 
-        // Permitimos gol sólo si la ronda está en juego y Start fue pulsado
+        // 1. Primero las comprobaciones de seguridad
         if (!startPressedThisRound) return;
         if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
 
-        // Si quieres exigir que solo cuente gol cuando shotArmed=true, deja esto:
-        // if (!shotArmed) return;
-
-        // Bloquear dobles
+        // 2. Bloquear dobles
         shotArmed = false;
         shotTimer = 0f;
 
+        // 3. Sumar puntos
         score++;
         attempts++;
 
-        // Portero: GOL -> decepción (si lo tienes)
+        // 4. Portero: GOL -> decepción
         if (keeper == null)
             keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
-        if (keeper != null)
-            keeper.PlayDisappointed();
+        
+        if (keeper)
+            keeper.PlayDisappointed(); // ✅ Ahora sí llegará hasta aquí
 
+        // 5. Iniciar la corrutina visual de GOL (solo una vez y al final)
         StartCoroutine(Co_RestartRoundWithFX(true));
-
     }
 
     public void ShotFail(bool force)
@@ -394,7 +321,7 @@ void OnDisable()
         // Portero: fallo -> celebra (si lo tienes)
         if (keeper == null)
             keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
-        if (keeper != null)
+        if (keeper)
             keeper.PlayCelebrate();
 
         StartCoroutine(Co_RestartRoundWithFX(false));
@@ -416,7 +343,7 @@ void OnDisable()
 
         float wait = GetResultDisplayDuration();
 
-        if (goalFX != null)
+        if (goalFX)
         {
             if (isGoal)
             {
@@ -450,7 +377,7 @@ void OnDisable()
         }
 
         var prog = FindFirstObjectByType<ProgressiveRoundController>(FindObjectsInactive.Include);
-        if (prog != null)
+        if (prog)
             prog.OnNewRound(attempts);
 
         ResetPositions();
@@ -499,7 +426,7 @@ void OnDisable()
 
         // Progresivo (si lo usas)
         var prog = FindFirstObjectByType<ProgressiveRoundController>(FindObjectsInactive.Include);
-        if (prog != null)
+        if (prog)
             prog.OnNewRound(attempts);
 
         // Reset posiciones para nueva ronda
@@ -595,7 +522,7 @@ void OnDisable()
         score += points;
 
         var popup = FindFirstObjectByType<PointsPopup>(FindObjectsInactive.Include);
-        if (popup != null)
+        if (popup)
             popup.ShowPoints(points);
 
         Debug.Log($"[GM] Diana alcanzada +{points} puntos");
@@ -623,7 +550,7 @@ void OnDisable()
             if (keeper == null)
                 keeper = FindFirstObjectByType<GoalkeeperAutoReact>(FindObjectsInactive.Include);
 
-            if (keeper != null)
+            if (keeper)
                 keeper.TriggerPerRoundAction();
         }
     }

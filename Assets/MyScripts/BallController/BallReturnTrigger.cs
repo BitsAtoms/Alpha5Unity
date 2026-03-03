@@ -20,7 +20,7 @@ public class BallReturnTrigger : MonoBehaviour
         alreadyTriggered = true;
 
         // Avisamos al GameManager para reiniciar la ronda
-        if (GameManager.I != null)
+        if (GameManager.I)
         {
             GameManager.I.ResetRoundExternally();
         }
