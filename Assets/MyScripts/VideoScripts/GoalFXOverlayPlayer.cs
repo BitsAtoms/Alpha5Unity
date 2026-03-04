@@ -37,7 +37,7 @@ public class GoalFXOverlayPlayer : MonoBehaviour
             sfxSource = GetComponent<AudioSource>();
 
         // Si asignaste musicSource en Inspector, guarda su volumen como normal automáticamente
-        if (musicSource != null)
+        if (musicSource)
             musicNormalVolume = musicSource.volume;
     }
 
@@ -59,7 +59,7 @@ public class GoalFXOverlayPlayer : MonoBehaviour
         animator.Play(stateName, 0, 0f);
 
         // SFX
-        if (sfxSource != null && clip != null)
+        if (sfxSource  && clip)
         {
             sfxSource.Stop();
             sfxSource.PlayOneShot(clip);

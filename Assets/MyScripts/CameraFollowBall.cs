@@ -19,7 +19,7 @@ public class CameraFollowBall : MonoBehaviour
             transform.position,
             desiredPosition,
             smoothSpeed * Time.deltaTime
-        );
+       );
 
         // mirar siempre a la pelota
         transform.LookAt(ball);
