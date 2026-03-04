@@ -1827,7 +1827,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StartGameButton
   hudRoot: {fileID: 1109007943}
   startButtonObject: {fileID: 618536854}
-  keeperFlagReaderObject: {fileID: 0}
+  keeperFlagReaderObject: {fileID: 1753340331}
 --- !u!4 &615905275
 Transform:
   m_ObjectHideFlags: 0
@@ -4317,7 +4317,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1753340333}
-  - component: {fileID: 1753340332}
+  - component: {fileID: 1753340336}
+  - component: {fileID: 1753340335}
+  - component: {fileID: 1753340334}
   m_Layer: 0
   m_Name: HardwareBridge
   m_TagString: Untagged
@@ -4325,20 +4327,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1753340332
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1753340331}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf58886585331164f9279d4733990db7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SerialAutoDetector
-  baudRate: 115200
-  inactiveTimeout: 0.6
 --- !u!4 &1753340333
 Transform:
   m_ObjectHideFlags: 0
@@ -4354,6 +4342,61 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1753340334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 853f37d4009b3424584ae951f846ab47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LidarKeeperMatcher
+  keeperTracker: {fileID: 1232071311}
+  lidarDetector: {fileID: 1753340336}
+  maxTimeDiffSeconds: 0.12
+  goalDistanceThreshold: 0.25
+  use2DDistance: 1
+--- !u!114 &1753340335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f5718befcbd36a4bb7bfab5147bfbd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SerialSensorEvent
+  portName: COM8
+  baudRate: 115200
+  inactiveTimeout: 0.6
+--- !u!114 &1753340336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 131f7d18a08ef4f43af6eb695ab11e54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LidarEventDetector
+  comPort: COM7
+  baudrate: 460800
+  latMaxM: 2
+  heightMaxM: 2
+  angleOffsetDeg: 270
+  angleMin: 0
+  angleMax: 90
+  deltaMm: 150
+  minPointsEvent: 3
+  eventCooldownS: 0.5
+  baselineSeconds: 2
 --- !u!1 &1779806289
 GameObject:
   m_ObjectHideFlags: 0
@@ -4854,6 +4897,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b9a305e18de0c04dbd257a21cd47087, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sharedProfile: {fileID: 0}
+  isGlobal: 0
+  blendDistance: 0
+  weight: 1
+  priority: 0
 --- !u!65 &2017729508
 BoxCollider:
   m_ObjectHideFlags: 0
