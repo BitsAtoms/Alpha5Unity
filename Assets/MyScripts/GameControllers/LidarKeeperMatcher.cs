@@ -6,28 +6,38 @@ public class LidarKeeperMatcher : MonoBehaviour
     [Header("Referencias")]
     public KeeperTracker keeperTracker;
     public LidarEventDetector lidarDetector; 
+    public Transform goalBottomLeft; 
+    public Transform goalTopRight;
 
-    [Header("Tolerance")]
+    [Header("Sincronización")]
     public double maxTimeDiffSeconds = 0.12;
-    public float goalDistanceThreshold = 0.25f;
-    public bool use2DDistance = true;
 
-    void OnEnable() {
+    [Header("Físicas de Unity")]
+    [Tooltip("El radio de la pelota virtual en metros (ej: 0.11 para un balón de fútbol)")]
+    public float ballRadius = 0.11f;
+    [Tooltip("El Tag que tienen los huesos del portero")]
+    public string keeperTag = "Goalkeeper";
+
+    // --- VARIABLES PARA EL DEBUG VISUAL ---
+    private Vector3 lastImpactPos;
+    private bool hasImpact = false;
+
+    void OnEnable() 
+    {
         if (lidarDetector) lidarDetector.OnGoalDetected += OnGoalSample;
     }
 
-    void OnDisable() {
+    void OnDisable() 
+    {
         if (lidarDetector) lidarDetector.OnGoalDetected -= OnGoalSample;
     }
 
-    void OnGoalSample(float lat01, float h01, double tsSeconds) {
-        if (GameManager.I == null) return;
+    void OnGoalSample(float lat01, float h01, double tsSeconds) 
+    {
+        // 1. Comprobaciones de seguridad del estado del juego
+        if (GameManager.I == null || !GameManager.I.CanShoot()) return;
 
-        // ✅ LA CLAVE: Si el juego no está listo para un tiro, ignoramos el LiDAR por completo
-        if (!GameManager.I.CanShoot()) {
-            return; // No hace nada durante reinicios o pausas
-        }
-
+        // Validamos la sincronización de tiempo con el tracker del portero
         if (keeperTracker == null || !keeperTracker.TryGetNearest(tsSeconds, out var k)) {
             GameManager.I.GoalScored();
             return;
@@ -36,13 +46,72 @@ public class LidarKeeperMatcher : MonoBehaviour
         double dt = Math.Abs(k.ts - tsSeconds);
         if (dt > maxTimeDiffSeconds) return; 
 
-        float dist = use2DDistance 
-            ? Mathf.Sqrt(Mathf.Pow(k.lat01 - lat01, 2) + Mathf.Pow(k.h01 - h01, 2)) 
-            : Mathf.Abs(k.lat01 - lat01);
+        if (goalBottomLeft == null || goalTopRight == null) {
+            Debug.LogError("[MATCH] Faltan las referencias de la portería (BottomLeft/TopRight)");
+            return;
+        }
 
-        Debug.Log($"[MATCH] Distancia Impacto-Portero: {dist:F3}");
+        // 2. Calcular el punto exacto 3D en el mundo de Unity
+        float worldX = Mathf.Lerp(goalBottomLeft.position.x, goalTopRight.position.x, lat01);
+        float worldY = Mathf.Lerp(goalBottomLeft.position.y, goalTopRight.position.y, h01);
+        float worldZ = Mathf.Lerp(goalBottomLeft.position.z, goalTopRight.position.z, lat01); 
+        
+        Vector3 impactPosition = new Vector3(worldX, worldY, worldZ);
 
-        if (dist >= goalDistanceThreshold) GameManager.I.GoalScored();
-        else GameManager.I.ShotFail();
+        // Guardamos la posición para que OnDrawGizmos pueda dibujar la esfera roja
+        lastImpactPos = impactPosition;
+        hasImpact = true;
+
+        // --- LAS 2 LÍNEAS MÁGICAS ---
+        // 1. Obliga a Unity a mover los colliders físicos a donde está la animación AHORA MISMO
+        Physics.SyncTransforms(); 
+
+        // 2. Comprobación antibalas: Forzamos que busque en TODAS las capas (Physics.AllLayers)
+        // y que detecte también colliders tipo Trigger por si acaso
+        Collider[] hitColliders = Physics.OverlapSphere(impactPosition, ballRadius, Physics.AllLayers, QueryTriggerInteraction.Collide);
+        // -----------------------------
+
+        bool touchedKeeper = false;
+        Debug.Log($"[DEBUG FÍSICAS] La esfera se creó y ha tocado {hitColliders.Length} objetos.");
+
+        foreach (var hitCollider in hitColliders)
+        {
+            // Que nos chive el nombre y el Tag de TODO lo que toque
+            Debug.Log($"[DEBUG FÍSICAS] -> Tocó: {hitCollider.gameObject.name} | Tag: {hitCollider.tag}");
+
+            if (hitCollider.CompareTag(keeperTag))
+            {
+                touchedKeeper = true;
+            }
+        }
+        // 4. Resolver la jugada
+        if (touchedKeeper) {
+            Debug.Log("🛡️ [MATCH] ¡PARADA! El balón físico chocó con el modelo del portero.");
+            GameManager.I.ShotFail();
+        } else {
+            Debug.Log("⚽ [MATCH] ¡GOL! El balón pasó limpio.");
+            GameManager.I.GoalScored();
+        }
+    }
+
+    // --- MAGIA VISUAL PARA EL EDITOR ---
+    void OnDrawGizmos()
+    {
+        // Dibuja la línea base de la portería en cyan
+        if (goalBottomLeft != null && goalTopRight != null) {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawLine(goalBottomLeft.position, goalTopRight.position);
+        }
+
+        // Dibuja la esfera exacta donde el LiDAR detectó la pelota
+        if (hasImpact) {
+            // Usamos un rojo semitransparente para ver a través de la bola
+            Gizmos.color = new Color(1f, 0f, 0f, 0.5f); 
+            Gizmos.DrawSphere(lastImpactPos, ballRadius);
+            
+            // Y un borde rojo fuerte para que se vea claro el contorno
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(lastImpactPos, ballRadius);
+        }
     }
 }

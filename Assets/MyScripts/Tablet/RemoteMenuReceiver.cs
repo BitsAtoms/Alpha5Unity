@@ -1,4 +1,3 @@
-using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -12,14 +11,13 @@ public class RemoteMenuReceiver : MonoBehaviour
     public int listenPort = 7777;
 
     [Header("Escenas")]
-    public string sceneAdulto = "ProyectoFinalAdulto";
-    public string sceneNino = "ProyectoFinalNiño";
+    public string sceneDificil = "ProyectoFinalDificil";
+    public string sceneStandard = "ProyectoFinalStandard";
 
     UdpClient udp;
     Thread thread;
     volatile bool running;
 
-    // Esto guarda el último comando recibido (lo procesa en Update para estar en el hilo principal)
     string pendingCommand = null;
 
     void Awake()
@@ -59,10 +57,11 @@ public class RemoteMenuReceiver : MonoBehaviour
             {
                 byte[] data = udp.Receive(ref ep);
                 string msg = Encoding.UTF8.GetString(data).Trim().ToUpperInvariant();
-                Debug.Log($"[REMOTE] Recibido '{msg}' desde {ep.Address}");
-                pendingCommand = msg; // se procesa en Update
+                pendingCommand = msg;
             }
-            catch { /* al cerrar el socket puede lanzar excepción: ignoramos */ }
+            catch
+            {
+            }
         }
     }
 
@@ -73,24 +72,17 @@ public class RemoteMenuReceiver : MonoBehaviour
         string cmd = pendingCommand;
         pendingCommand = null;
 
-        EnsureSettings();
+        Debug.Log($"[REMOTE] Procesando '{cmd}'");
 
-        if (cmd == "ADULTO" || cmd == "NORMAL")
+        if (cmd == "DIFICIL")
         {
-            GameSettings.I.SetMode(GameMode.Normal);
-            SceneManager.LoadScene(sceneAdulto);
+            Debug.Log("[REMOTE] Cargando escena dificil");
+            SceneManager.LoadScene(sceneDificil);
         }
-        else if (cmd == "NINO" || cmd == "NIÑO")
+        else if (cmd == "STANDARD")
         {
-            GameSettings.I.SetMode(GameMode.Nino);
-            SceneManager.LoadScene(sceneNino);
+            Debug.Log("[REMOTE] Cargando escena standard");
+            SceneManager.LoadScene(sceneStandard);
         }
-    }
-
-    void EnsureSettings()
-    {
-        if (GameSettings.I != null) return;
-        var go = new GameObject("GameSettings");
-        go.AddComponent<GameSettings>();
     }
 }

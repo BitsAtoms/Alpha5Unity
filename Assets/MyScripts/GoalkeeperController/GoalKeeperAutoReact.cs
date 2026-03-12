@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections; // <-- Necesario para las Corrutinas
 
 public class GoalkeeperAutoReact : MonoBehaviour
 {
@@ -50,7 +51,6 @@ public class GoalkeeperAutoReact : MonoBehaviour
         if (animator) {
             animator.applyRootMotion = true;
             animator.SetInteger(DiveDir, DIR_IDLE);
-            // Eliminado el Update(0f) para evitar tirones
         }
     }
 
@@ -70,7 +70,7 @@ public class GoalkeeperAutoReact : MonoBehaviour
         if (animator) {
             animator.applyRootMotion = true;
             animator.Rebind();
-            animator.Update(0f); // Aquí SÍ está bien forzarlo porque es un reinicio estático
+            animator.Update(0f); 
         }
 
         SetIdle();
@@ -94,13 +94,31 @@ public class GoalkeeperAutoReact : MonoBehaviour
 
     public void TriggerPerRoundAction()
     {
-        int dive = Random.Range(1, 3); 
         if (keeperReactedThisRound) return;
         keeperReactedThisRound = true;
 
+        int dive = Random.Range(DIR_LEFT, DIR_RIGHT + 1); 
+        
         if (animator) {
             animator.SetInteger(DiveDir, dive);
-            // Eliminado el Update(0f) para que el salto se mezcle de forma suave
+            
+            // Iniciamos la corrutina para resetear el valor y evitar bucles
+            StartCoroutine(ResetDiveDirectionAfterTrigger());
+        }
+    }
+
+    // --- MAGIA AQUÍ ---
+    private IEnumerator ResetDiveDirectionAfterTrigger()
+    {
+        // Esperamos un cuarto de segundo. Es tiempo suficiente para que el Animator
+        // detecte el número y empiece a transicionar a la animación de parada.
+        yield return new WaitForSeconds(0.25f);
+
+        if (animator) {
+            // Devolvemos el parámetro a Idle (0).
+            // La animación actual seguirá reproduciéndose hasta el final,
+            // pero cuando termine, volverá al estado Idle en lugar de repetirse.
+            animator.SetInteger(DiveDir, DIR_IDLE);
         }
     }
 }
