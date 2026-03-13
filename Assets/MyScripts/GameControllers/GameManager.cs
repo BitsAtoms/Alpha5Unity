@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
@@ -15,7 +16,7 @@ public class GameManager : MonoBehaviour
     public float keeperActionDelay = 1f;
 
     Coroutine keeperActionRoutine;
-
+    
 
     bool pulseSequenceActive = false;
     float pulseSequenceTimer = 0f;
@@ -359,22 +360,20 @@ public class GameManager : MonoBehaviour
 
         yield return new WaitForSeconds(wait);
 
-        // ----- a partir de aquí es tu lógica normal de final de ronda -----
+                     
         if (attempts >= GetMaxAttempts())
         {
             state = GameState.EndGame;
 
             Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{GetMaxAttempts()}");
+
             yield return new WaitForSeconds(GetEndGameRestartDelay());
 
-            // Reset completo
-            score = 0;
-            attempts = 0;
+            // Cargar escena de espera
+            SceneManager.LoadScene("escenaEspera");
 
-            ResetPositions();
-            ShowStartForNewRound();
             yield break;
-        }
+        }   
 
         var prog = FindFirstObjectByType<ProgressiveRoundController>(FindObjectsInactive.Include);
         if (prog)
@@ -447,9 +446,9 @@ public class GameManager : MonoBehaviour
         shotTimer = 0f;
         roundTimer = 0f;
 
-        Set(uiAttempts, $"Intento: {attempts + 1}/{GetMaxAttempts()}");
-        Set(uiMessage, "Listo para chutar");
-        Set(uiScore, $"Puntuación: {score}");
+        Set(uiAttempts, $"Intent: {attempts + 1}/{GetMaxAttempts()}");
+        Set(uiMessage, "Pots xutar");
+        Set(uiScore, $"Puntuació: {score}");
 
         yield return new WaitForSeconds(GetBannerDuration());
 
