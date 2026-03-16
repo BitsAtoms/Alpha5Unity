@@ -3,7 +3,7 @@ using UnityEngine;
 public class LidarImpactVisualizer : MonoBehaviour
 {
     [Header("Referencias")]
-    public LidarEventDetector lidarDetector;
+    public SickLidarDetector lidarDetector;
     public Transform goalBottomLeft; // Usa los mismos que en KeeperTracker
     public Transform goalTopRight;
     

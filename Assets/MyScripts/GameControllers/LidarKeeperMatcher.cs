@@ -5,7 +5,7 @@ public class LidarKeeperMatcher : MonoBehaviour
 {
     [Header("Referencias")]
     public KeeperTracker keeperTracker;
-    public LidarEventDetector lidarDetector; 
+    public SickLidarDetector lidarDetector; 
     public Transform goalBottomLeft; 
     public Transform goalTopRight;
 

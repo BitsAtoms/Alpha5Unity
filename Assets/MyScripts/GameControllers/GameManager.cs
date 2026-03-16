@@ -66,7 +66,7 @@ public class GameManager : MonoBehaviour
     float roundTimer = 0f;
 
     // Cache refs (evita Find cada frame)
-    SerialSensorEvent sensorDetector;
+    SickPhotoelectricSensor sensorDetector;
     GoalkeeperAutoReact keeper;
     StartGameButton startButtonUI;
 
@@ -76,7 +76,7 @@ public class GameManager : MonoBehaviour
     void OnEnable() 
     { 
         I = this; 
-        sensorDetector = FindFirstObjectByType<SerialSensorEvent>();
+        sensorDetector = FindFirstObjectByType<SickPhotoelectricSensor>();
         if (sensorDetector) sensorDetector.OnSensorTriggered += OnPhysicalSensorHit;
     }
 
