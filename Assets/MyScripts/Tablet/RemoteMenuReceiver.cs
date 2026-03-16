@@ -7,6 +7,10 @@ using UnityEngine.SceneManagement;
 
 public class RemoteMenuReceiver : MonoBehaviour
 {
+    [Header("Identificador de Máquina")]
+    [Tooltip("Debe coincidir EXACTAMENTE con el de la Tablet")]
+    public string machineID = "PENALTYCHALLENGE";
+
     [Header("UDP")]
     public int listenPort = 7777;
 
@@ -24,7 +28,7 @@ public class RemoteMenuReceiver : MonoBehaviour
     {
         DontDestroyOnLoad(gameObject);
         StartListener();
-        Debug.Log($"[REMOTE] Escuchando UDP en puerto {listenPort}");
+        Debug.Log($"[REMOTE] Escuchando UDP en puerto {listenPort} para la máquina {machineID}");
     }
 
     void OnDestroy() => StopListener();
@@ -74,12 +78,16 @@ public class RemoteMenuReceiver : MonoBehaviour
 
         Debug.Log($"[REMOTE] Procesando '{cmd}'");
 
-        if (cmd == "DIFICIL")
+        // Convertimos a mayúsculas por seguridad (por si en el inspector escribes "Cabina1")
+        string targetDificil = $"{machineID.ToUpperInvariant()}:DIFICIL";
+        string targetStandard = $"{machineID.ToUpperInvariant()}:STANDARD";
+
+        if (cmd == targetDificil)
         {
             Debug.Log("[REMOTE] Cargando escena dificil");
             SceneManager.LoadScene(sceneDificil);
         }
-        else if (cmd == "STANDARD")
+        else if (cmd == targetStandard)
         {
             Debug.Log("[REMOTE] Cargando escena standard");
             SceneManager.LoadScene(sceneStandard);

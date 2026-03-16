@@ -45,6 +45,8 @@ public class GameManager : MonoBehaviour
     [Header("Regla: si pasan X segundos desde que empieza la ronda y NO hay gol => fallo automático")]
     public float failAfterSeconds = 5f;
 
+    public float exactShotStartTime = 0f;
+
     // Estado
     GameState state = GameState.WaitingForBall;
 
@@ -132,6 +134,8 @@ public class GameManager : MonoBehaviour
     {
         if (!startPressedThisRound || keeperActionDoneThisRound) return;
         if (state != GameState.ReadyToShoot && state != GameState.ShotInProgress) return;
+
+        exactShotStartTime = Time.time;
 
         Debug.Log("[GM] Evento de Sensor recibido. Iniciando parada.");
         keeperActionDoneThisRound = true;

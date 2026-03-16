@@ -37,6 +37,16 @@ public class LidarKeeperMatcher : MonoBehaviour
         // 1. Comprobaciones de seguridad del estado del juego
         if (GameManager.I == null || !GameManager.I.CanShoot()) return;
 
+        float travelTime = Time.time - GameManager.I.exactShotStartTime;
+        
+        // Opcional: Si sabes la distancia física de tu portería, puedes sacar la velocidad. 
+        // Asumiendo 3 metros:
+        float distanceMeters = 3.0f; 
+        float speedMs = distanceMeters / travelTime;
+        float speedKmh = speedMs * 3.6f;
+
+        Debug.Log($"⏱️ [MÉTRICAS TIRO] Tiempo de vuelo: {travelTime:F3} seg | Vel. Aprox: {speedKmh:F1} km/h");
+
         // Validamos la sincronización de tiempo con el tracker del portero
         if (keeperTracker == null || !keeperTracker.TryGetNearest(tsSeconds, out var k)) {
             GameManager.I.GoalScored();
