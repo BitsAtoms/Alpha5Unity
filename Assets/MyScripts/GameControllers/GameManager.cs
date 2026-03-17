@@ -52,6 +52,7 @@ public class GameManager : MonoBehaviour
 
     int score = 0;
     int attempts = 0;
+    int currentGoalMultiplier = 1;
 
     bool shotArmed = false;
     float shotTimer = 0f;
@@ -227,6 +228,7 @@ public class GameManager : MonoBehaviour
         roundTimer = 0f;
         pulseSequenceActive = false;
         pulseSequenceTimer = 0f;
+        currentGoalMultiplier = 1;
 
         state = GameState.WaitingForBall;
         if (keeperActionRoutine != null)
@@ -290,8 +292,8 @@ public class GameManager : MonoBehaviour
         shotArmed = false;
         shotTimer = 0f;
 
-        // 3. Sumar puntos
-        score++;
+        int goalPoints = 1 * currentGoalMultiplier;
+        score += goalPoints;
         attempts++;
 
         // 4. Portero: GOL -> decepción
@@ -522,15 +524,15 @@ public class GameManager : MonoBehaviour
     // ============================
     public void AddTargetScore(int points)
     {
-        score += points;
+        int round = attempts + 1;
+        currentGoalMultiplier = GetTargetMultiplierForRound(round);
 
         var popup = FindFirstObjectByType<PointsPopup>(FindObjectsInactive.Include);
         if (popup)
-            popup.ShowPoints(points);
+            popup.ShowPoints(currentGoalMultiplier);
 
-        Debug.Log($"[GM] Diana alcanzada +{points} puntos");
+        Debug.Log($"[GM] Diana alcanzada en ronda {round} -> multiplicador activado x{currentGoalMultiplier}");
     }
-
     IEnumerator Co_FailAfterDelay()
     {
         yield return new WaitForSeconds(failDelayAfterKeeper);
@@ -556,6 +558,29 @@ public class GameManager : MonoBehaviour
             if (keeper)
                 keeper.TriggerPerRoundAction();
         }
+    }
+
+    int GetTargetMultiplierForRound(int round)
+    {
+        switch (round)
+        {
+            case 3: return 2;
+            case 4: return 3;
+            case 5: return 5;
+            default: return 1;
+        }
+    }
+    public void SetGoalMultiplier(int multiplier)
+    {
+        if (multiplier <= currentGoalMultiplier) return;
+
+        currentGoalMultiplier = multiplier;
+
+        var popup = FindFirstObjectByType<PointsPopup>(FindObjectsInactive.Include);
+        if (popup)
+            popup.ShowPoints(currentGoalMultiplier);
+
+        Debug.Log($"[GM] Multiplicador de gol activado -> x{currentGoalMultiplier}");
     }
 
 

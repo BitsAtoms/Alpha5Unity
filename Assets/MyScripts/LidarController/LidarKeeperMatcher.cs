@@ -82,17 +82,41 @@ public class LidarKeeperMatcher : MonoBehaviour
         // -----------------------------
 
         bool touchedKeeper = false;
+        TargetScore touchedTarget = null;
+
         Debug.Log($"[DEBUG FÍSICAS] La esfera se creó y ha tocado {hitColliders.Length} objetos.");
 
         foreach (var hitCollider in hitColliders)
         {
-            // Que nos chive el nombre y el Tag de TODO lo que toque
             Debug.Log($"[DEBUG FÍSICAS] -> Tocó: {hitCollider.gameObject.name} | Tag: {hitCollider.tag}");
 
             if (hitCollider.CompareTag(keeperTag))
             {
                 touchedKeeper = true;
             }
+
+            if (touchedTarget == null)
+            {
+                touchedTarget = hitCollider.GetComponentInParent<TargetScore>();
+            }
+        }
+
+        // Primero activar multiplicador de diana si la hemos tocado
+        if (touchedTarget != null)
+        {
+            touchedTarget.TryActivateFromLidar();
+        }
+
+        // Resolver la jugada
+        if (touchedKeeper)
+        {
+            Debug.Log("🛡️ [MATCH] ¡PARADA! El balón físico chocó con el modelo del portero.");
+            GameManager.I.ShotFail();
+        }
+        else
+        {
+            Debug.Log("⚽ [MATCH] ¡GOL! El balón pasó limpio.");
+            GameManager.I.GoalScored();
         }
         // 4. Resolver la jugada
         if (touchedKeeper) {
