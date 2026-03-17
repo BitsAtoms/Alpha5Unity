@@ -583,7 +583,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 590019842}
   - {fileID: 1665491130}
   - {fileID: 1393707421}
   m_Father: {fileID: 0}
@@ -660,6 +659,7 @@ MonoBehaviour:
   ball: {fileID: 0}
   ballStartPoint: {fileID: 0}
   failAfterSeconds: 3
+  exactShotStartTime: 0
 --- !u!4 &112104997
 Transform:
   m_ObjectHideFlags: 0
@@ -6611,90 +6611,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 576795946}
   m_CullTransparentMesh: 1
---- !u!1001 &590019841
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 78786883}
-    m_Modifications:
-    - target: {fileID: 5017618134789240218, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_Name
-      value: SM_S_Gate
-      objectReference: {fileID: 0}
-    - target: {fileID: 5017618134789240218, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 83
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 49.1845
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.76
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -79.49467
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.061224602
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.998124
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 9dab8772c52fc7c4893fb63a2cf3ab36, type: 3}
---- !u!4 &590019842 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5686350570854280992, guid: 9dab8772c52fc7c4893fb63a2cf3ab36,
-    type: 3}
-  m_PrefabInstance: {fileID: 590019841}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &590869654 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -2007360980418682783, guid: 9f5d7bc436708144c9bf07ba0a1da5b5,
@@ -7476,9 +7392,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LidarKeeperMatcher
   keeperTracker: {fileID: 1232071311}
-  lidarDetector: {fileID: 0}
-  goalBottomLeft: {fileID: 0}
-  goalTopRight: {fileID: 0}
+  lidarDetector: {fileID: 1753340339}
+  goalBottomLeft: {fileID: 1870908623}
+  goalTopRight: {fileID: 84446125}
   maxTimeDiffSeconds: 0.12
   ballRadius: 0.11
   keeperTag: Goalkeeper
@@ -15018,10 +14934,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1753340333}
-  - component: {fileID: 1753340336}
-  - component: {fileID: 1753340335}
   - component: {fileID: 1753340334}
   - component: {fileID: 1753340337}
+  - component: {fileID: 1753340339}
+  - component: {fileID: 1753340338}
   m_Layer: 0
   m_Name: HardwareBridge
   m_TagString: Untagged
@@ -15057,50 +14973,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LidarKeeperMatcher
   keeperTracker: {fileID: 1232071311}
-  lidarDetector: {fileID: 1753340336}
+  lidarDetector: {fileID: 1753340339}
   goalBottomLeft: {fileID: 1870908623}
   goalTopRight: {fileID: 84446125}
   maxTimeDiffSeconds: 0.12
   ballRadius: 0.2
   keeperTag: Goalkeeper
---- !u!114 &1753340335
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1753340331}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f5718befcbd36a4bb7bfab5147bfbd8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SerialSensorEvent
-  portName: COM6
-  baudRate: 115200
-  inactiveTimeout: 0.6
---- !u!114 &1753340336
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1753340331}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 131f7d18a08ef4f43af6eb695ab11e54, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LidarEventDetector
-  comPort: COM5
-  baudrate: 460800
-  latMaxM: 2
-  heightMaxM: 2
-  angleOffsetDeg: 270
-  angleMin: 0
-  angleMax: 90
-  deltaMm: 150
-  minPointsEvent: 3
-  eventCooldownS: 0.5
-  baselineSeconds: 2
 --- !u!114 &1753340337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15113,11 +14991,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2088f1ed15f91e4499b168c80dd34c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LidarImpactVisualizer
-  lidarDetector: {fileID: 1753340336}
+  lidarDetector: {fileID: 1753340339}
   goalBottomLeft: {fileID: 1870908623}
   goalTopRight: {fileID: 84446125}
   impactMarkerPrefab: {fileID: 1103003795}
   markerDuration: 2
+--- !u!114 &1753340338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 663a1f234b9c19f4687c4c9d924111f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SickPhotoelectricSensor
+  portName: COM6
+  baudRate: 115200
+  sensorCooldown: 1
+--- !u!114 &1753340339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753340331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b269c37352a090e46b7d848071d8e1d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SickLidarDetector
+  sickIP: 192.168.0.1
+  sickPort: 2112
 --- !u!1 &1779806289
 GameObject:
   m_ObjectHideFlags: 0
