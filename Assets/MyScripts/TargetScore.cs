@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class TargetScore : MonoBehaviour
 {
-    [Header("Multiplicador de esta diana")]
-    public int multiplier = 2;
-
     private bool triggeredThisRound = false;
 
     public bool TryActivateFromLidar()
@@ -15,9 +12,9 @@ public class TargetScore : MonoBehaviour
         triggeredThisRound = true;
 
         if (GameManager.I)
-            GameManager.I.SetGoalMultiplier(multiplier);
+            GameManager.I.ActivateRoundTargetMultiplier();
 
-        Debug.Log($"[TargetScore] Diana activada por LiDAR -> x{multiplier}");
+        Debug.Log("[TargetScore] Diana activada por LiDAR");
         return true;
     }
 

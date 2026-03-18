@@ -292,7 +292,8 @@ public class GameManager : MonoBehaviour
         shotArmed = false;
         shotTimer = 0f;
 
-        int goalPoints = 1 * currentGoalMultiplier;
+        // 3. Sumar puntos
+        int goalPoints = 10 * currentGoalMultiplier;
         score += goalPoints;
         attempts++;
 
@@ -581,6 +582,22 @@ public class GameManager : MonoBehaviour
             popup.ShowPoints(currentGoalMultiplier);
 
         Debug.Log($"[GM] Multiplicador de gol activado -> x{currentGoalMultiplier}");
+    }
+
+    public void ActivateRoundTargetMultiplier()
+    {
+        int round = attempts + 1;
+        int multiplier = GetTargetMultiplierForRound(round);
+
+        if (multiplier <= currentGoalMultiplier) return;
+
+        currentGoalMultiplier = multiplier;
+
+        var popup = FindFirstObjectByType<PointsPopup>(FindObjectsInactive.Include);
+        if (popup)
+            popup.ShowPoints(currentGoalMultiplier);
+
+        Debug.Log($"[GM] Diana alcanzada en ronda {round} -> multiplicador x{currentGoalMultiplier}");
     }
 
 
