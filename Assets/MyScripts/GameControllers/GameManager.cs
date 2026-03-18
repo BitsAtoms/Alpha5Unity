@@ -36,6 +36,9 @@ public class GameManager : MonoBehaviour
     public TMP_Text uiScore;
     public TMP_Text uiAttempts;
 
+    [Header("Ranking Final")]
+    public LeaderboardDisplay leaderboardDisplayUI; 
+
     [Header("Referencias")]
     public BallController ball;
 
@@ -371,15 +374,29 @@ public class GameManager : MonoBehaviour
         {
             state = GameState.EndGame;
 
-            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}/{GetMaxAttempts()}");
+            Set(uiMessage, $"Fin del juego\nPuntuación final: {score}");
 
-            yield return new WaitForSeconds(GetEndGameRestartDelay());
+            // 1. Guardar la puntuación silenciosamente (evita duplicados con su ID interno)
+            if (LeaderboardManager.I != null) 
+            {
+                LeaderboardManager.I.AddScore(score);
+            }
 
-            // Cargar escena de espera
+            // 2. Encender el panel de los Rankings y decirle que se dibuje
+            if (leaderboardDisplayUI != null)
+            {
+                // Activamos el objeto visual
+                leaderboardDisplayUI.gameObject.SetActive(true);
+                // Forzamos a que lea el JSON de nuevo (para que incluya la puntuación que acabamos de meter)
+                leaderboardDisplayUI.RefreshDisplay();
+            }
+
+            yield return new WaitForSeconds(5f);
+
             SceneManager.LoadScene("escenaEspera");
 
             yield break;
-        }   
+        }
 
         var prog = FindFirstObjectByType<ProgressiveRoundController>(FindObjectsInactive.Include);
         if (prog)
