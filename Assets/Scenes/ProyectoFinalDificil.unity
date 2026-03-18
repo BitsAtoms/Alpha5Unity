@@ -243,6 +243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
+  multiplier: 2
 --- !u!1 &47484662
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,7 +370,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &47484665
@@ -550,6 +551,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
+  multiplier: 2
 --- !u!1 &78786882
 GameObject:
   m_ObjectHideFlags: 0
@@ -653,6 +655,7 @@ MonoBehaviour:
   uiMessage: {fileID: 994646875}
   uiScore: {fileID: 481406071}
   uiAttempts: {fileID: 47484664}
+  leaderboardDisplayUI: {fileID: 1787791138}
   ball: {fileID: 0}
   ballStartPoint: {fileID: 0}
   failAfterSeconds: 3
@@ -1121,6 +1124,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
+  multiplier: 2
 --- !u!1 &311824245
 GameObject:
   m_ObjectHideFlags: 0
@@ -6213,7 +6217,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &481406072
@@ -8260,7 +8264,7 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!222 &994646876
@@ -8395,6 +8399,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
+  multiplier: 2
 --- !u!1 &1103003795
 GameObject:
   m_ObjectHideFlags: 0
@@ -8541,6 +8546,7 @@ RectTransform:
   - {fileID: 47484663}
   - {fileID: 576795947}
   - {fileID: 698094319}
+  - {fileID: 1787791137}
   m_Father: {fileID: 1147988895}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -8814,6 +8820,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8479333c0202034bb6487c8f617a541, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetScore
+  multiplier: 2
 --- !u!1 &1163389570
 GameObject:
   m_ObjectHideFlags: 0
@@ -15000,6 +15007,51 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1665491129}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1744992875
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1744992877}
+  - component: {fileID: 1744992876}
+  m_Layer: 0
+  m_Name: Leaderboard
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1744992876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1744992875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47acaf6ec0f967146943b7a85e962ee2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LeaderboardManager
+  maxEntriesToKeep: 10
+--- !u!4 &1744992877
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1744992875}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1993.1383, y: 0, z: 1623.6903}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1753340331
 GameObject:
   m_ObjectHideFlags: 0
@@ -15322,6 +15374,84 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &1787791136
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1787791137}
+  - component: {fileID: 1787791139}
+  - component: {fileID: 1787791138}
+  m_Layer: 5
+  m_Name: LeaderboardPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1787791137
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787791136}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1109007944}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1787791138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787791136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24f5e08de63536b4a9227bd569944c34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LeaderboardDisplay
+  container: {fileID: 1787791137}
+  rowPrefab: {fileID: 4022321611941536666, guid: 943e913cf3733ee49a2d307e5cbdaf7e,
+    type: 3}
+--- !u!114 &1787791139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1787791136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 10
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1792225945
 GameObject:
   m_ObjectHideFlags: 0
@@ -16308,3 +16438,4 @@ SceneRoots:
   - {fileID: 1792225947}
   - {fileID: 1103003799}
   - {fileID: 2006020804}
+  - {fileID: 1744992877}
